@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 namespace FrameLine
 {
-    public class FrameLineAction : ISerializationCallbackReceiver
+    [System.Serializable]
+    public class FrameAction : ISerializationCallbackReceiver
     {
         public string GUID;
         public int StartFrame;
@@ -15,8 +16,8 @@ namespace FrameLine
         private SerializationData jsonData;
 
         [System.NonSerialized]
-        private IFrameLineAction data;
-        public IFrameLineAction Data
+        private IFrameAction data;
+        public IFrameAction Data
         {
             get
             {
@@ -27,14 +28,14 @@ namespace FrameLine
                 return data;
             }
         }
-        public void SetData(IFrameLineAction nodeData)
+        public void SetData(IFrameAction nodeData)
         {
             data = nodeData;
             OnBeforeSerialize();
         }
         public void Deserialize()
         {
-            data = TypeSerializerHelper.Deserialize(jsonData) as IFrameLineAction;
+            data = TypeSerializerHelper.Deserialize(jsonData) as IFrameAction;
         }
 
         public void OnAfterDeserialize()

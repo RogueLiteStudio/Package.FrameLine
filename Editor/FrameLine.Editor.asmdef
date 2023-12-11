@@ -2,7 +2,6 @@
     "name": "FrameLine.Editor",
     "rootNamespace": "",
     "references": [
-        "FrameLine.Runtime",
         "Serialization.Runtime",
         "Serialization.UJson"
     ],
