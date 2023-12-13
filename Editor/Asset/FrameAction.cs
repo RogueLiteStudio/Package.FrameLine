@@ -10,7 +10,7 @@ namespace FrameLine
         public bool Enable = true;
         public string Name;
         public string Comment;
-
+        public string TypeGUID => jsonData.TypeGUID;
 
         [SerializeField]
         private SerializationData jsonData;

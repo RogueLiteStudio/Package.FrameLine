@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Serialization.Runtime",
-        "Serialization.UJson"
+        "Serialization.UJson",
+        "PropertyEditor.Runtime"
     ],
     "includePlatforms": [
         "Editor"

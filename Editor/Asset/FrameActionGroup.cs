@@ -10,5 +10,15 @@ namespace FrameLine
         public string Description;
         public int FrameCount;
         public List<FrameAction> Actions = new List<FrameAction>();
+
+        public FrameAction Find(string id)
+        {
+            foreach (var action in Actions)
+            {
+                if (action.GUID == id)
+                    return action;
+            }
+            return null;
+        }
     }
 }
