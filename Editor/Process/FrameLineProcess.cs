@@ -23,9 +23,16 @@ namespace FrameLine
                             if (typeof(IFrameLineProcess).IsAssignableFrom(type))
                             {
                                 var attribute = type.GetCustomAttribute<CustomFrameLineProcessAttribute>(false);
-                                if (process.ContainsKey(attribute.AssetType))
+                                if (attribute != null)
                                 {
-                                    process.Remove(attribute.AssetType);
+                                    if (!attribute.AssetType.IsSubclassOf(typeof(FrameLineAsset)))
+                                    {
+                                        UnityEngine.Debug.LogError($"{type.Name} 的 CustomFrameLineProcess 类型错误，不是 FrameLineAsset 的子类");
+                                    }
+                                    else if (process.ContainsKey(attribute.AssetType))
+                                    {
+                                        process.Remove(attribute.AssetType);
+                                    }
                                 }
                                 process.Add(attribute.AssetType, Activator.CreateInstance(type) as IFrameLineProcess);
                             }
