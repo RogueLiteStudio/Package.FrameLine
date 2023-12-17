@@ -16,6 +16,7 @@ namespace FrameLine
         {
             HasDraged = true;
             int frame = FrameLineUtil.PosToFrame(pos.x);
+
             if (frame != lastFrame)
             {
                 if (!hasModify)

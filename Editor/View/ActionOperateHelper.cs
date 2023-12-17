@@ -73,11 +73,13 @@ namespace FrameLine
             }
         }
 
-        public static void MoveActionEnd(this FrameLineEditorView gui, FrameAction action, int frame)
+        public static void MoveActionEnd(this FrameActionGroup group, FrameAction action, int frame)
         {
-            if (frame >= gui.FrameCount || frame < action.StartFrame)
+            if (frame >= group.FrameCount || frame < action.StartFrame)
                 return;
-            if (action.Length <= 0 && frame == (gui.FrameCount - 1))
+            if (frame >= group.FrameCount && frame >= action.StartFrame + action.Length)
+                return;
+            if (action.Length <= 0 && frame == (group.FrameCount - 1))
                 return;
             action.Length = Mathf.Max(frame - action.StartFrame + 1, 1);
         }

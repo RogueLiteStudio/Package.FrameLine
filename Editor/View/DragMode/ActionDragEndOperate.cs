@@ -13,7 +13,7 @@ namespace FrameLine
 
         protected override void OnDrag(Vector2 pos, int frame)
         {
-            EditorView.MoveActionEnd(action, frame);
+            EditorView.Group.MoveActionEnd(action, frame);
         }
 
         public override FrameActionHitPartType GetDragePart(FrameAction action)

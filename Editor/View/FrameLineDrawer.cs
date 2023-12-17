@@ -104,7 +104,7 @@ namespace FrameLine
                     float offsetY = viewOffsetY;
                     float offsetX = action.StartFrame * ViewStyles.FrameWidth;
                     int frameCount = action.Length;
-                    if (action.Length <= 0 || frameCount > (editorView.FrameCount - action.StartFrame))
+                    if (action.Length <= 0)
                         frameCount = editorView.FrameCount - action.StartFrame;
                     Rect clipRect = new Rect(offsetX, offsetY, ViewStyles.FrameWidth * frameCount, ViewStyles.ClipHeight);
                     GUIRenderHelper.DrawRect(clipRect, ViewStyles.InvalidClipColor, 5, BorderType.All);
@@ -120,7 +120,7 @@ namespace FrameLine
                 float offsetY = viewOffsetY + i * ViewStyles.TrackHeight;
                 float offsetX = action.StartFrame * ViewStyles.FrameWidth;
                 int frameCount = action.Length;
-                if (action.Length <= 0 || frameCount > (editorView.FrameCount - action.StartFrame))
+                if (action.Length <= 0)
                     frameCount = editorView.FrameCount - action.StartFrame;
                 //左侧控制区域
                 Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);

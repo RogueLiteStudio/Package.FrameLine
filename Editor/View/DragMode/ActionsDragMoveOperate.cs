@@ -19,6 +19,14 @@ namespace FrameLine
 
                 int startFrame = action.StartFrame + (frame - lastFrame);
                 startFrame = Mathf.Clamp(startFrame, 0, EditorView.FrameCount - 1);
+                //如果已经超出有效帧数，则不能往后移动
+                if (action.Length > 0 && action.StartFrame < startFrame)
+                {
+                    if (startFrame + action.Length > 0)
+                    {
+                        continue;
+                    }
+                }
                 action.StartFrame = startFrame;
             }
         }

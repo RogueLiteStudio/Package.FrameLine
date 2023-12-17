@@ -46,7 +46,7 @@ namespace FrameLine
                         {
                             var e = Event.current;
                             Vector2 mousePos = e.mousePosition;
-                            Rect showRect = new Rect(0, editorView.ScrollPos.y, size.x - ViewStyles.ScrollBarSize, size.y - ViewStyles.FrameBarHeight - ViewStyles.ScrollBarSize);
+                            Rect showRect = new Rect(editorView.ScrollPos.x, editorView.ScrollPos.y, size.x - ViewStyles.ScrollBarSize, size.y - ViewStyles.FrameBarHeight - ViewStyles.ScrollBarSize);
                             bool mouseInView = showRect.Contains(mousePos);
                             if (mouseInView)
                             {
@@ -67,10 +67,11 @@ namespace FrameLine
                 float viewHeight = size.y - ViewStyles.FrameBarHeight - ViewStyles.ScrollBarSize;
                 Rect vBarRect = new Rect(size.x - ViewStyles.ScrollBarSize, 0, ViewStyles.ScrollBarSize, size.y - ViewStyles.ScrollBarSize);
                 editorView.ScrollPos.y = GUI.VerticalScrollbar(vBarRect, editorView.ScrollPos.y, viewHeight, 0, frameHeight);
-
+                editorView.ScrollPos.y = Mathf.Max(0, editorView.ScrollPos.y);
                 float viewWidth = size.x - ViewStyles.ScrollBarSize;
                 Rect hBarRect = new Rect(0, size.y - ViewStyles.ScrollBarSize, size.x - ViewStyles.ScrollBarSize, ViewStyles.ScrollBarSize);
                 editorView.ScrollPos.x = GUI.HorizontalScrollbar(hBarRect, editorView.ScrollPos.x, viewWidth, 0, frameWidth);
+                editorView.ScrollPos.x = Mathf.Max(0, editorView.ScrollPos.x);
             }
             return repaint;
         }

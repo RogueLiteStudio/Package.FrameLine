@@ -172,6 +172,8 @@ namespace FrameLine
         protected virtual void DrawTrackHead()
         {
             var size = _headView.layout.size;
+            if (float.IsNaN(size.x))
+                return;
             VisableFrameStart = Mathf.FloorToInt(ScrollPos.x / ViewStyles.FrameWidth);
             VisableTrackStart = Mathf.FloorToInt(ScrollPos.y / (ViewStyles.FrameWidth + ViewStyles.ClipVInterval));
             VisableTrackEnd = Mathf.CeilToInt((size.y + ScrollPos.y - VisableTrackStart * (ViewStyles.ClipHeight + ViewStyles.ClipVInterval)) / (ViewStyles.ClipHeight + ViewStyles.ClipVInterval));
@@ -188,6 +190,8 @@ namespace FrameLine
         protected virtual void DrawTrack()
         {
             var size = _trackView.layout.size;
+            if (float.IsNaN(size.x))
+                return;
             VisableFrameEnd = Mathf.CeilToInt((size.x + ScrollPos.x - VisableFrameStart * ViewStyles.FrameWidth) / ViewStyles.FrameWidth) + VisableFrameStart;
             using (new GUI.ClipScope(new Rect(Vector2.zero, size)))
             {
