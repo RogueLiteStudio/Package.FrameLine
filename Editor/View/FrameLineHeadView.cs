@@ -55,6 +55,12 @@ namespace FrameLine
                         editorView.FramePassTime = 0;
                     }
                     GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("+", EditorStyles.toolbarButton))
+                    {
+                        GenericMenu menu = new GenericMenu();
+                        
+                        menu.ShowAsContext();
+                    }
                 }
             }
         }

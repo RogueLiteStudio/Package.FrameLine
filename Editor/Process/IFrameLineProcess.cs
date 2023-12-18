@@ -6,6 +6,7 @@ namespace FrameLine
     {
         Type EditorWindowType { get; }
         FrameLineAsset OnCreateAction();
+        bool CheckIsValidNodeType(Type type);
         void OnSave(FrameLineAsset asset);
     }
 }

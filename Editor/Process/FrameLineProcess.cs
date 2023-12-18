@@ -6,6 +6,7 @@ namespace FrameLine
 {
     public static class FrameLineProcess
     {
+        private static Dictionary<Type, IReadOnlyList<Type>> _actionTypes = new Dictionary<Type, IReadOnlyList<Type>>();
         private static Dictionary<Type, IFrameLineProcess> process;
         public static Dictionary<Type, IFrameLineProcess> Process
         {
@@ -67,6 +68,32 @@ namespace FrameLine
             {
                 proc.OnSave(asset);
             }
+        }
+        public static IReadOnlyList<Type> GetNodeTypes(FrameLineAsset asset)
+        {
+            var type = asset.GetType();
+            if (!_actionTypes.TryGetValue(type, out var tys))
+            {
+                if (Process.TryGetValue(type, out var proc))
+                {
+                    var list = new List<Type>();
+                    tys = list;
+                    _actionTypes.Add(type, tys);
+                    foreach (var assemble in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        foreach (var t in assemble.GetTypes())
+                        {
+                            if (t.IsInterface || t.IsAbstract)
+                                continue;
+                            if (proc.CheckIsValidNodeType(t))
+                            {
+                                list.Add(t);
+                            }
+                        }
+                    }
+                }
+            }
+            return tys;
         }
     }
 }
