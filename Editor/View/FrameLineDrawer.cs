@@ -15,14 +15,14 @@ namespace FrameLine
                 {
                     if (i % 5 == 0)
                     {
-                        using (new Handles.DrawingScope(new Color(0.5f, 0.5f, 0.5f, 0.5f)))
+                        using (new Handles.DrawingScope(ViewStyles.BGGridLineColor))
                         {
                             Handles.DrawLine(new Vector2(xPos, showRect.yMin), new Vector2(xPos, showRect.yMax));
                         }
                     }
                     else
                     {
-                        using (new Handles.DrawingScope(new Color(0.5f, 0.5f, 0.5f, 0.125f)))
+                        using (new Handles.DrawingScope(ViewStyles.BGGridDotLineColor))
                         {
                             Handles.DrawDottedLine(new Vector2(xPos, showRect.yMin + ViewStyles.FrameBarHeight*0.5f), new Vector2(xPos, showRect.yMax), 5f);
                         }

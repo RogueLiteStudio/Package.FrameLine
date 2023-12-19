@@ -18,7 +18,8 @@ namespace FrameLine
 
         public const float TrackHeadWidth = 150;
         public const float TrackFoldSize = 10;
-
+        public static readonly Color BGGridLineColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+        public static readonly Color BGGridDotLineColor = new Color(0.5f, 0.5f, 0.5f, 0.25f);
         public static readonly Color SelectFrameBackGroundColor = new Color32(67, 205, 128, 40);
         public static readonly Color TrackBGColor = new Color32(80, 80, 80, 60);
         public static readonly Color ClipCtrlColor = new Color32(67, 205, 128, 100);
