@@ -90,13 +90,14 @@ namespace FrameLine
             float viewOffsetY = viewTrackIndex * ViewStyles.TrackHeight;
             int visableSubTrackCount = track.Foldout ? track.Count : 1;
             float trackHeight = ViewStyles.TrackHeight * visableSubTrackCount - ViewStyles.ClipVInterval;
+            //大背景
             Rect rect = new Rect(0, viewOffsetY, width, trackHeight);
             GUIRenderHelper.DrawRect(rect, ViewStyles.TrackBGColor, 5, BorderType.Left);
+            //颜色条
             Rect colorRect = rect;
             colorRect.width = ViewStyles.TrackFoldSize;
             GUIRenderHelper.DrawRect(colorRect, track.TypeColor, 5, BorderType.Left);
-            Rect titleRect = rect;
-            titleRect.height = ViewStyles.ClipHeight;
+            //标题
             Rect foldRect = new Rect(0, viewOffsetY, width-50, ViewStyles.ClipHeight);
             track.Foldout = EditorGUI.Foldout(foldRect, track.Foldout, track.Name, true);
             for (int i=0; i<track.Count; ++i)
