@@ -59,7 +59,7 @@ namespace FrameLine
                             editorView.ScrollToFrame(editorView.CurrentFrame);
                         }
                         GUILayout.FlexibleSpace();
-                        if (GUILayout.Button("+", EditorStyles.toolbarButton))
+                        if (GUILayout.Button(BuiltInIcon.Instance.Add, EditorStyles.toolbarButton))
                         {
                             var types = FrameLineProcess.GetActionTypes(editorView.Asset);
                             if (types != null && types.Count > 0)

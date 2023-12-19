@@ -10,6 +10,7 @@ namespace FrameLine
         public string TypeGUID;
         public bool Foldout = true;//未被折叠
         public List<string> Actions = new List<string>();
+        public UnityEngine.Color TypeColor;
 
         public int Count => Actions.Count;
 

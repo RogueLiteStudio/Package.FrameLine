@@ -133,7 +133,7 @@ namespace FrameLine
 
         public FrameLineTrack OnAddAction(FrameAction action)
         {
-            var track = GetTrack(action.Data.GetType().Name);
+            var track = GetTrack(action.Data.GetType());
             if (track.Name == null)
             {
                 track.Name = FrameLineUtil.GetTypeShowName(action.Data.GetType());
@@ -149,14 +149,15 @@ namespace FrameLine
                     break;
             }
         }
-        protected FrameLineTrack GetTrack(string typeGUID)
+        protected FrameLineTrack GetTrack(System.Type type)
         {
-            var track = Tracks.Find(it => it.TypeGUID == typeGUID);
+            var track = Tracks.Find(it => it.TypeGUID == type.Name);
             if (track == null)
             {
                 track = new FrameLineTrack()
                 {
-                    TypeGUID = typeGUID,
+                    TypeGUID = type.Name,
+                    TypeColor = ViewStyles.GetActionColor(type),
                 };
                 Tracks.Add(track);
             }
@@ -199,7 +200,7 @@ namespace FrameLine
             VisableTrackEnd = Mathf.CeilToInt((size.y + ScrollPos.y - VisableTrackStart * (ViewStyles.ClipHeight + ViewStyles.ClipVInterval)) / (ViewStyles.ClipHeight + ViewStyles.ClipVInterval));
             using (new GUI.ClipScope(new Rect(Vector2.zero, size)))
             {
-                if (HeadView.OnGUI(this, size))
+                if (HeadView.OnGUI(this, size) || Event.current.type == EventType.Used)
                 {
                     _headView.MarkDirtyRepaint();
                     _trackView.MarkDirtyRepaint();
@@ -215,7 +216,7 @@ namespace FrameLine
             VisableFrameEnd = Mathf.CeilToInt((size.x + ScrollPos.x - VisableFrameStart * ViewStyles.FrameWidth) / ViewStyles.FrameWidth) + VisableFrameStart;
             using (new GUI.ClipScope(new Rect(Vector2.zero, size)))
             {
-                if (TrackView.OnGUI(this, size))
+                if (TrackView.OnGUI(this, size) || Event.current.type == EventType.Used)
                 {
                     _headView.MarkDirtyRepaint();
                     _trackView.MarkDirtyRepaint();

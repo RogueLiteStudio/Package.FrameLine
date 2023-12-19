@@ -9,12 +9,14 @@ namespace FrameLine
         public GUIContent Pause;
         public GUIContent PrevKey;
         public GUIContent NextKey;
+        public GUIContent Add;
         private BuiltInIcon()
         {
             Play = EditorGUIUtility.IconContent("Animation.Play");
             Pause = EditorGUIUtility.IconContent("PauseButton");
             PrevKey = EditorGUIUtility.IconContent("Animation.PrevKey");
             NextKey = EditorGUIUtility.IconContent("Animation.NextKey");
+            Add = EditorGUIUtility.IconContent("d_CreateAddNew");
         }
 
         private static BuiltInIcon _instance;

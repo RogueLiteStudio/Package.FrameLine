@@ -94,7 +94,7 @@ namespace FrameLine
             GUIRenderHelper.DrawRect(rect, ViewStyles.TrackBGColor, 5, BorderType.Left);
             Rect colorRect = rect;
             colorRect.width = ViewStyles.TrackFoldSize;
-            GUIRenderHelper.DrawRect(colorRect, ViewStyles.ClipCtrlColor, 5, BorderType.Left);
+            GUIRenderHelper.DrawRect(colorRect, track.TypeColor, 5, BorderType.Left);
             Rect titleRect = rect;
             titleRect.height = ViewStyles.ClipHeight;
             Rect foldRect = new Rect(0, viewOffsetY, width-50, ViewStyles.ClipHeight);
@@ -177,33 +177,44 @@ namespace FrameLine
                 Rect fullRect = new Rect(offsetX, offsetY, ViewStyles.FrameWidth * frameCount, ViewStyles.ClipHeight);
                 if (action.Data is IFrameEvent)
                 {
-                    GUIRenderHelper.DrawRect(fullRect, ViewStyles.ClipColor);
+                    //事件类型Action
+                    //画背景
+                    GUIRenderHelper.DrawRect(fullRect, ViewStyles.EventColor, ViewStyles.ClipCtrlWidth, BorderType.Bottom);
+                    //底部颜色条
+                    Rect colorRect = fullRect;
+                    colorRect.y += colorRect.height - ViewStyles.ClipColorHeight;
+                    colorRect.height = ViewStyles.ClipColorHeight;
+                    GUIRenderHelper.DrawRect(colorRect, track.TypeColor, ViewStyles.ClipCtrlWidth, BorderType.Bottom);
                 }
                 else
                 {
+                    //画背景
+                    GUIRenderHelper.DrawRect(fullRect, ViewStyles.ClipColor, ViewStyles.ClipCtrlWidth, BorderType.All);
+                    //底部颜色条
+                    Rect colorRect = fullRect;
+                    colorRect.y += colorRect.height - ViewStyles.ClipColorHeight;
+                    colorRect.height = ViewStyles.ClipColorHeight;
+                    GUIRenderHelper.DrawRect(colorRect, track.TypeColor, ViewStyles.ClipCtrlWidth, BorderType.Bottom);
                     //左侧控制区域
-                    Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);
                     FrameActionHitPartType dragPart = editorView.EventHandler.GetDragePart(action);
-                    Color color = dragPart == FrameActionHitPartType.LeftCtrl ? ViewStyles.ClipSelectCtrlColor : ViewStyles.ClipCtrlColor;
-                    GUIRenderHelper.DrawRect(clipLeftCtrlRect, color, ViewStyles.ClipCtrlWidth, BorderType.Left);
+                    if (dragPart == FrameActionHitPartType.LeftCtrl)
+                    {
+                        Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);
+                        GUIRenderHelper.DrawRect(clipLeftCtrlRect, ViewStyles.ClipSelectCtrlColor, ViewStyles.ClipCtrlWidth, BorderType.Left);
+                    }
                     //右侧
                     int clipEndFrame = action.StartFrame + frameCount - 1;
-                    Rect clipRightCtrlRect = new Rect((clipEndFrame + 1) * ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth,
-                        offsetY,
-                        ViewStyles.ClipCtrlWidth,
-                        ViewStyles.ClipHeight);
                     if (action.Length > 0)
                     {
-                        color = dragPart == FrameActionHitPartType.RightCtrl ? ViewStyles.ClipSelectCtrlColor : ViewStyles.ClipCtrlColor;
-                        GUIRenderHelper.DrawRect(clipRightCtrlRect, color, ViewStyles.ClipCtrlWidth, BorderType.Right);
+                        if (dragPart == FrameActionHitPartType.RightCtrl)
+                        {
+                            Rect clipRightCtrlRect = new Rect((clipEndFrame + 1) * ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth,
+                                offsetY,
+                                ViewStyles.ClipCtrlWidth,
+                                ViewStyles.ClipHeight);
+                            GUIRenderHelper.DrawRect(clipRightCtrlRect, ViewStyles.ClipSelectCtrlColor, ViewStyles.ClipCtrlWidth, BorderType.Right);
+                        }
                     }
-                    else
-                    {
-                        GUIRenderHelper.DrawRect(clipRightCtrlRect, ViewStyles.ClipColor);
-                    }
-                    //中间区域
-                    Rect clipRect = new Rect(clipLeftCtrlRect.xMax, offsetY, clipRightCtrlRect.xMin - clipLeftCtrlRect.xMax, ViewStyles.ClipHeight);
-                    GUIRenderHelper.DrawRect(clipRect, ViewStyles.ClipColor);
                 }
                 if (editorView.IsSlecected(action))
                 {
