@@ -22,7 +22,7 @@ namespace FrameLine
                 //如果已经超出有效帧数，则不能往后移动
                 if (action.Length > 0 && action.StartFrame < startFrame)
                 {
-                    if (startFrame + action.Length > 0)
+                    if (startFrame + action.Length > EditorView.Group.FrameCount)
                     {
                         continue;
                     }

@@ -8,7 +8,7 @@ namespace FrameLine
         public ActionDragEndOperate(FrameLineEditorView view, FrameAction action) : base(view)
         {
             this.action = action;
-            lastFrame = FrameActionUtil.GetClipEndFrame(view.Group, action);
+            lastFrame = FrameActionUtil.GetActionEndFrame(view.Group, action);
         }
 
         protected override void OnDrag(Vector2 pos, int frame)

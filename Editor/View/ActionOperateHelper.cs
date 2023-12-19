@@ -3,29 +3,30 @@ namespace FrameLine
 {
     public static class ActionOperateHelper
     {
-        public static void RemoveSelectedAction(this FrameLineEditorView gui)
+        public static void RemoveSelectedAction(this FrameLineEditorView view)
         {
-            if (gui.SelectedActions.Count == 0)
+            if (view.SelectedActions.Count == 0)
                 return;
-            gui.RegistUndo("remove action");
-            foreach (var id in gui.SelectedActions)
+            view.RegistUndo("remove action");
+            foreach (var id in view.SelectedActions)
             {
-                int idx = gui.Group.Actions.FindIndex((a) => a.GUID == id);
+                int idx = view.Group.Actions.FindIndex((a) => a.GUID == id);
                 if (idx >= 0)
                 {
-                    gui.Group.Actions.RemoveAt(idx);
-                    gui.OnRemoveAction(id);
+                    view.Group.Actions.RemoveAt(idx);
+                    view.OnRemoveAction(id);
                 }
             }
-            gui.SelectedActions.Clear();
+            view.SelectedActions.Clear();
+            view.RebuildTrack();
         }
 
-        public static void PasteActions(this FrameLineEditorView gui, FrameLineClipboard.ActionData[] actions)
+        public static void PasteActions(this FrameLineEditorView view, FrameLineClipboard.ActionData[] actions)
         {
             if (actions == null || actions.Length == 0)
                 return;
-            gui.RegistUndo("paste action");
-            gui.SelectedActions.Clear();
+            view.RegistUndo("paste action");
+            view.SelectedActions.Clear();
             foreach (var data in actions) 
             {
                 var action = new FrameAction 
@@ -38,21 +39,22 @@ namespace FrameLine
                     Comment = data.Comment,
                 };
                 action.SetData(TypeSerializerHelper.Deserialize(data.Data) as IFrameAction);
-                gui.Group.Actions.Add(action);
-                gui.OnAddAction(action);
-                gui.SelectedActions.Add(action.GUID);
+                view.Group.Actions.Add(action);
+                view.OnAddAction(action);
+                view.SelectedActions.Add(action.GUID);
             }
+            view.RebuildTrack();
         }
 
-        public static void MoveSelectedActions(this FrameLineEditorView gui, int offsetFrame)
+        public static void MoveSelectedActions(this FrameLineEditorView view, int offsetFrame)
         {
-            foreach (var id in gui.SelectedActions)
+            foreach (var id in view.SelectedActions)
             {
-                var action = gui.Group.Find(id);
+                var action = view.Group.Find(id);
                 if (action == null)
                     continue;
                 int startFrame = action.StartFrame - offsetFrame;
-                startFrame = Mathf.Clamp(startFrame, 0, gui.FrameCount - 1);
+                startFrame = Mathf.Clamp(startFrame, 0, view.FrameCount - 1);
                 action.StartFrame = startFrame;
             }
         }
@@ -61,7 +63,7 @@ namespace FrameLine
         {
             if (frame < 0)
                 return;
-            int endFrame = FrameActionUtil.GetClipEndFrame(group, action);
+            int endFrame = FrameActionUtil.GetActionEndFrame(group, action);
             if (frame > endFrame)
                 return;
             int lastStart = action.StartFrame;
@@ -84,16 +86,16 @@ namespace FrameLine
             action.Length = Mathf.Max(frame - action.StartFrame + 1, 1);
         }
 
-        public static void SetSelectLengthToEnd(this FrameLineEditorView gui)
+        public static void SetSelectLengthToEnd(this FrameLineEditorView view)
         {
-            if (gui.SelectedActions.Count == 0)
+            if (view.SelectedActions.Count == 0)
                 return;
-            gui.RegistUndo("set length to end");
-            foreach (var id in gui.SelectedActions)
+            view.RegistUndo("set length to end");
+            foreach (var id in view.SelectedActions)
             {
-                var action = gui.Group.Find(id);
-                if (action != null)
-                    action.Length = gui.Group.FrameCount - action.StartFrame;
+                var action = view.Group.Find(id);
+                if (action != null && action.Data is IFrameClip)
+                    action.Length = view.Group.FrameCount - action.StartFrame;
             }
         }
     }

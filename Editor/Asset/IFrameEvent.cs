@@ -1,6 +1,6 @@
 ﻿namespace FrameLine
 {
-    public class IFrameEvent : IFrameAction
+    public interface IFrameEvent : IFrameAction
     {
     }
 }

@@ -9,8 +9,12 @@ namespace FrameLine
             return a.StartFrame - b.StartFrame;
 
         }
-        public static int GetClipEndFrame(FrameActionGroup group, FrameAction action)
+        public static int GetActionEndFrame(FrameActionGroup group, FrameAction action)
         {
+            if (action.Data is IFrameEvent)
+            {
+                return action.StartFrame;
+            }
             if (action.Length > 0)
             {
                 return Mathf.Clamp(action.Length + action.StartFrame - 1, action.StartFrame, group.FrameCount);

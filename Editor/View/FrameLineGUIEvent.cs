@@ -46,22 +46,27 @@ namespace FrameLine
                     var action = EditorView.Group.Find(track.Actions[hitSubIndex]);
                     if (action.StartFrame <= hitFrame)
                     {
-                        int endFrame = FrameActionUtil.GetClipEndFrame(EditorView.Group, action);
+                        int endFrame = FrameActionUtil.GetActionEndFrame(EditorView.Group, action);
                         if (endFrame >= hitFrame)
                         {
-                            float frameOffset = point.x % ViewStyles.FrameWidth;
-                            if (frameOffset <= ViewStyles.ClipCtrlWidth && action.StartFrame == hitFrame)
+                            do 
                             {
-                                result.HitPart = FrameActionHitPartType.LeftCtrl;
-                            }
-                            else if (action.Length > 0 && endFrame == hitFrame && (frameOffset >= (ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth)))
-                            {
-                                result.HitPart = FrameActionHitPartType.RightCtrl;
-                            }
-                            else
-                            {
+                                if (action.Data is not IFrameEvent)
+                                {
+                                    float frameOffset = point.x % ViewStyles.FrameWidth;
+                                    if (frameOffset <= ViewStyles.ClipCtrlWidth && action.StartFrame == hitFrame)
+                                    {
+                                        result.HitPart = FrameActionHitPartType.LeftCtrl;
+                                        break;
+                                    }
+                                    else if (action.Length > 0 && endFrame == hitFrame && (frameOffset >= (ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth)))
+                                    {
+                                        result.HitPart = FrameActionHitPartType.RightCtrl;
+                                        break;
+                                    }
+                                }
                                 result.HitPart = FrameActionHitPartType.Normal;
-                            }
+                            } while (false);
                             result.Action = action;
                         }
                     }
@@ -80,8 +85,34 @@ namespace FrameLine
                 return false;
             if (e.button == 1 && e.type == EventType.MouseUp)
             {
+                FrameLineTrack hitTrack = null;
+                int hitTrackIndex = Mathf.FloorToInt(e.mousePosition.y / ViewStyles.TrackHeight);
+                int trackIndex = 0;
+                for (int i=0; i<EditorView.Tracks.Count; ++i)
+                {
+                    var track = EditorView.Tracks[i];
+                    if (track.Count == 0)
+                        continue;
+                    if (trackIndex > hitTrackIndex)
+                        break;
+                    int trackVisableCount = (track.Foldout ? track.Count : 1);
+                    if (trackIndex <= hitTrackIndex && trackIndex + trackVisableCount > hitTrackIndex)
+                    {
+                        hitTrack = track;
+                        break;
+                    }
+                }
                 GenericMenu menu = new GenericMenu();
-                EditorView.OnTrackHeadMenue(menu);
+                if (hitTrack != null)
+                {
+                    menu.AddItem(new GUIContent("全选"), false, () => 
+                    {
+                        EditorView.SelectedActions.Clear();
+                        EditorView.SelectedActions.AddRange(hitTrack.Actions);
+                    });
+                    menu.AddItem(new GUIContent("展开"), hitTrack.Foldout, () => hitTrack.Foldout = !hitTrack.Foldout);
+                }
+                EditorView.OnTrackHeadMenue(menu, hitTrack);
                 if (menu.GetItemCount() > 0)
                 {
                     menu.ShowAsContext();
@@ -103,7 +134,18 @@ namespace FrameLine
                     int selectFrame = Mathf.FloorToInt(e.mousePosition.x / ViewStyles.FrameWidth);
                     if (selectFrame >= 0 && selectFrame < EditorView.Group.FrameCount)
                     {
-                        EditorView.CurrentFrame = selectFrame;
+                        if (EditorView.CurrentFrame != selectFrame)
+                        {
+                            EditorView.CurrentFrame = selectFrame;
+                            if (selectFrame == EditorView.VisableFrameStart)
+                            {
+                                EditorView.ScrollToFrame(selectFrame - 1);
+                            }
+                            else if (selectFrame >= (EditorView.VisableFrameEnd - 2))
+                            {
+                                EditorView.ScrollToFrame(selectFrame + 1);
+                            }
+                        }
                     }
                     IsDragFrameBar = true;
                     e.Use();

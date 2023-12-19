@@ -6,19 +6,34 @@ namespace FrameLine
     {
         public static void DrawFrameLineBackGround(FrameLineEditorView gui, Rect showRect, int showMaxFrame)
         {
-            using (new Handles.DrawingScope(new Color(0.5f, 0.5f, 0.5f, 0.5f)))
+            int startIndex = Mathf.Clamp(gui.VisableFrameStart, 0, gui.Group.FrameCount);
+            int endIndex = Mathf.Clamp(gui.VisableFrameEnd, 0, showMaxFrame);
+            for (int i = startIndex; i <= endIndex; ++i)
             {
-                int startIndex = Mathf.Clamp(gui.VisableFrameStart, 0, gui.Group.FrameCount);
-                int endIndex = Mathf.Clamp(gui.VisableFrameEnd, 0, showMaxFrame);
-                for (int i = startIndex; i <= endIndex; ++i)
+                float xPos = i * ViewStyles.FrameWidth;
+                if (i <= gui.Group.FrameCount)
                 {
-                    float xPos = i * ViewStyles.FrameWidth;
-                    if (i <= gui.Group.FrameCount)
-                        Handles.DrawLine(new Vector2(xPos, showRect.yMin), new Vector2(xPos, showRect.yMax));
-                    if (i < endIndex)
-                        GUI.Label(new Rect(xPos, 0, ViewStyles.FrameWidth, ViewStyles.FrameBarHeight), i.ToString(), ViewStyles.FrameNumStyle);
+                    if (i % 5 == 0)
+                    {
+                        using (new Handles.DrawingScope(new Color(0.5f, 0.5f, 0.5f, 0.5f)))
+                        {
+                            Handles.DrawLine(new Vector2(xPos, showRect.yMin), new Vector2(xPos, showRect.yMax));
+                        }
+                    }
+                    else
+                    {
+                        using (new Handles.DrawingScope(new Color(0.5f, 0.5f, 0.5f, 0.125f)))
+                        {
+                            Handles.DrawDottedLine(new Vector2(xPos, showRect.yMin + ViewStyles.FrameBarHeight*0.5f), new Vector2(xPos, showRect.yMax), 5f);
+                        }
+                    }
+                }
+                if (i < endIndex && i % 5 == 0)
+                {
+                    GUI.Label(new Rect(xPos, 0, ViewStyles.FrameWidth, ViewStyles.FrameBarHeight*0.5f), i.ToString(), ViewStyles.FrameNumStyle);
                 }
             }
+
             if (gui.CurrentFrame >= gui.VisableFrameStart && gui.CurrentFrame <= gui.VisableFrameEnd)
             {
                 Rect rect = new Rect(gui.CurrentFrame * ViewStyles.FrameWidth, 0, ViewStyles.FrameWidth, showRect.height);
@@ -72,18 +87,42 @@ namespace FrameLine
 
         public static void DrawTrackHead(FrameLineEditorView editorView, FrameLineTrack track, int viewTrackIndex, float width)
         {
-            float viewOffsetY = viewTrackIndex * (ViewStyles.ClipHeight + ViewStyles.ClipVInterval);
+            float viewOffsetY = viewTrackIndex * ViewStyles.TrackHeight;
             int visableSubTrackCount = track.Foldout ? track.Count : 1;
             float trackHeight = ViewStyles.TrackHeight * visableSubTrackCount - ViewStyles.ClipVInterval;
-            Rect rect = new Rect(ViewStyles.TrackFoldSize, viewOffsetY, width - ViewStyles.TrackFoldSize, trackHeight);
+            Rect rect = new Rect(0, viewOffsetY, width, trackHeight);
             GUIRenderHelper.DrawRect(rect, ViewStyles.TrackBGColor, 5, BorderType.Left);
+            Rect colorRect = rect;
+            colorRect.width = ViewStyles.TrackFoldSize;
+            GUIRenderHelper.DrawRect(colorRect, ViewStyles.ClipCtrlColor, 5, BorderType.Left);
             Rect titleRect = rect;
             titleRect.height = ViewStyles.ClipHeight;
-            GUI.Label(titleRect, track.Name);
-            if (track.Count > 1)
+            Rect foldRect = new Rect(0, viewOffsetY, width-50, ViewStyles.ClipHeight);
+            track.Foldout = EditorGUI.Foldout(foldRect, track.Foldout, track.Name, true);
+            for (int i=0; i<track.Count; ++i)
             {
-                Rect foldRect = new Rect(0, viewOffsetY, ViewStyles.TrackFoldSize, ViewStyles.ClipHeight);
-                track.Foldout = EditorGUI.Foldout(foldRect, track.Foldout, "");
+                var action = editorView.Group.Find(track.Actions[i]);
+                if (action == null)
+                    continue;
+                int endFrame = FrameActionUtil.GetActionEndFrame(editorView.Group, action);
+                if (action.StartFrame > editorView.VisableFrameEnd - 2)
+                {
+                    //提示开始帧，点击跳转到开始帧
+                    Rect tipRect = new Rect(width - 50, viewOffsetY + i*ViewStyles.TrackHeight, 50, ViewStyles.ClipHeight);
+                    if (GUI.Button(tipRect, $"{action.StartFrame}>", ViewStyles.ActionSkipStyle))
+                    {
+                        editorView.ScrollToFrame(action.StartFrame);
+                    }
+                }
+                if (endFrame < editorView.VisableFrameStart)
+                {
+                    //提示结束帧，点击跳转到开始帧
+                    Rect tipRect = new Rect(width - 50, viewOffsetY + i * ViewStyles.TrackHeight, 50, ViewStyles.ClipHeight);
+                    if (GUI.Button(tipRect, $"<{endFrame}", ViewStyles.ActionSkipStyle))
+                    {
+                        editorView.ScrollToFrame(action.StartFrame);
+                    }
+                }
             }
         }
         public static void DrawTrack(FrameLineEditorView editorView, FrameLineTrack track, int viewTrackIndex, int startSubIndex, int endSubIndex)
@@ -104,8 +143,15 @@ namespace FrameLine
                     float offsetY = viewOffsetY;
                     float offsetX = action.StartFrame * ViewStyles.FrameWidth;
                     int frameCount = action.Length;
-                    if (action.Length <= 0)
+                    
+                    if (action.Data is IFrameEvent)
+                    {
+                        frameCount = 1;
+                    }
+                    else if (action.Length <= 0)
+                    {
                         frameCount = editorView.FrameCount - action.StartFrame;
+                    }
                     Rect clipRect = new Rect(offsetX, offsetY, ViewStyles.FrameWidth * frameCount, ViewStyles.ClipHeight);
                     GUIRenderHelper.DrawRect(clipRect, ViewStyles.InvalidClipColor, 5, BorderType.All);
                 }
@@ -120,34 +166,47 @@ namespace FrameLine
                 float offsetY = viewOffsetY + i * ViewStyles.TrackHeight;
                 float offsetX = action.StartFrame * ViewStyles.FrameWidth;
                 int frameCount = action.Length;
-                if (action.Length <= 0)
-                    frameCount = editorView.FrameCount - action.StartFrame;
-                //左侧控制区域
-                Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);
-                FrameActionHitPartType dragPart = editorView.EventHandler.GetDragePart(action);
-                Color color = dragPart == FrameActionHitPartType.LeftCtrl ? ViewStyles.ClipSelectCtrlColor : ViewStyles.ClipCtrlColor;
-                GUIRenderHelper.DrawRect(clipLeftCtrlRect, color, ViewStyles.ClipCtrlWidth, BorderType.Left);
-                //右侧
-                int clipEndFrame = action.StartFrame + frameCount - 1;
-                Rect clipRightCtrlRect = new Rect((clipEndFrame + 1) * ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth,
-                    offsetY,
-                    ViewStyles.ClipCtrlWidth,
-                    ViewStyles.ClipHeight);
-                if (action.Length > 0)
+                if (action.Data is IFrameEvent)
                 {
-                    color = dragPart == FrameActionHitPartType.RightCtrl ? ViewStyles.ClipSelectCtrlColor : ViewStyles.ClipCtrlColor;
-                    GUIRenderHelper.DrawRect(clipRightCtrlRect, color, ViewStyles.ClipCtrlWidth, BorderType.Right);
+                    frameCount = 1;
+                }
+                else if (action.Length <= 0)
+                {
+                    frameCount = editorView.FrameCount - action.StartFrame;
+                }
+                Rect fullRect = new Rect(offsetX, offsetY, ViewStyles.FrameWidth * frameCount, ViewStyles.ClipHeight);
+                if (action.Data is IFrameEvent)
+                {
+                    GUIRenderHelper.DrawRect(fullRect, ViewStyles.ClipColor);
                 }
                 else
                 {
-                    GUIRenderHelper.DrawRect(clipRightCtrlRect, ViewStyles.ClipColor);
+                    //左侧控制区域
+                    Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);
+                    FrameActionHitPartType dragPart = editorView.EventHandler.GetDragePart(action);
+                    Color color = dragPart == FrameActionHitPartType.LeftCtrl ? ViewStyles.ClipSelectCtrlColor : ViewStyles.ClipCtrlColor;
+                    GUIRenderHelper.DrawRect(clipLeftCtrlRect, color, ViewStyles.ClipCtrlWidth, BorderType.Left);
+                    //右侧
+                    int clipEndFrame = action.StartFrame + frameCount - 1;
+                    Rect clipRightCtrlRect = new Rect((clipEndFrame + 1) * ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth,
+                        offsetY,
+                        ViewStyles.ClipCtrlWidth,
+                        ViewStyles.ClipHeight);
+                    if (action.Length > 0)
+                    {
+                        color = dragPart == FrameActionHitPartType.RightCtrl ? ViewStyles.ClipSelectCtrlColor : ViewStyles.ClipCtrlColor;
+                        GUIRenderHelper.DrawRect(clipRightCtrlRect, color, ViewStyles.ClipCtrlWidth, BorderType.Right);
+                    }
+                    else
+                    {
+                        GUIRenderHelper.DrawRect(clipRightCtrlRect, ViewStyles.ClipColor);
+                    }
+                    //中间区域
+                    Rect clipRect = new Rect(clipLeftCtrlRect.xMax, offsetY, clipRightCtrlRect.xMin - clipLeftCtrlRect.xMax, ViewStyles.ClipHeight);
+                    GUIRenderHelper.DrawRect(clipRect, ViewStyles.ClipColor);
                 }
-                //中间区域
-                Rect clipRect = new Rect(clipLeftCtrlRect.xMax, offsetY, clipRightCtrlRect.xMin - clipLeftCtrlRect.xMax, ViewStyles.ClipHeight);
-                GUIRenderHelper.DrawRect(clipRect, ViewStyles.ClipColor);
                 if (editorView.IsSlecected(action))
                 {
-                    Rect fullRect = new Rect(offsetX, offsetY, ViewStyles.FrameWidth * frameCount, ViewStyles.ClipHeight);
                     GUIRenderHelper.DrawWireRect(fullRect, ViewStyles.SelectClipWireFrameColor, ViewStyles.ClipCtrlWidth, BorderType.All);
                 }
             }

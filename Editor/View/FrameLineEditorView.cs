@@ -95,11 +95,13 @@ namespace FrameLine
             return SelectedActions.Contains(action.GUID);
         }
         public virtual void OnAddCreateMenue(GenericMenu menu) { }
-        public virtual void RegistUndo(string name)
+        public virtual void RegistUndo(string name, bool needSave = true)
         {
             Undo.RegisterCompleteObjectUndo(Asset, name);
-            EditorUtility.SetDirty(Asset);
-
+            if (needSave)
+            {
+                EditorUtility.SetDirty(Asset);
+            }
             Undo.RegisterCompleteObjectUndo(this, name);
         }
 
@@ -108,7 +110,7 @@ namespace FrameLine
 
         }
 
-        public virtual void OnTrackHeadMenue(GenericMenu menu)
+        public virtual void OnTrackHeadMenue(GenericMenu menu, FrameLineTrack track)
         {
 
         }
@@ -167,6 +169,24 @@ namespace FrameLine
             FrameTrackUtil.RebuildTrack(this);
             _headView?.MarkDirtyRepaint();
             _trackView?.MarkDirtyRepaint();
+        }
+
+        public void ScrollToFrame(int frame)
+        {
+            bool left = VisableFrameStart >= frame;
+            bool right = VisableFrameEnd < (frame + 2);
+            if ( right || left)
+            {
+                int visableFrameCount = VisableFrameEnd - VisableFrameStart;
+                if (right)
+                {
+                    ScrollPos.x = (frame - visableFrameCount + 2.5f) * ViewStyles.FrameWidth;
+                }
+                else if (left)
+                {
+                    ScrollPos.x = frame * ViewStyles.FrameWidth;
+                }
+            }
         }
 
         protected virtual void DrawTrackHead()

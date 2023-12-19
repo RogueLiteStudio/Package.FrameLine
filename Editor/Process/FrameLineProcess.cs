@@ -69,7 +69,7 @@ namespace FrameLine
                 proc.OnSave(asset);
             }
         }
-        public static IReadOnlyList<Type> GetNodeTypes(FrameLineAsset asset)
+        public static IReadOnlyList<Type> GetActionTypes(FrameLineAsset asset)
         {
             var type = asset.GetType();
             if (!_actionTypes.TryGetValue(type, out var tys))
