@@ -2,9 +2,8 @@
     "name": "FrameLine.Editor",
     "rootNamespace": "",
     "references": [
-        "Serialization.Runtime",
-        "Serialization.UJson",
-        "PropertyEditor.Runtime"
+        "Common.Runtime",
+        "Common.Unity"
     ],
     "includePlatforms": [
         "Editor"
