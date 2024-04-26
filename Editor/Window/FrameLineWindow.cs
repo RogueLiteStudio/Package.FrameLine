@@ -50,7 +50,10 @@ namespace FrameLine
         {
             FrameLineEditorView editorView = CreateInstance<FrameLineEditorView>();
             editorView.Asset = asset;
-            editorView.SwitchGroup(asset.Groups[0].GUID);
+            if (asset.Groups.Count > 0)
+            {
+                editorView.SwitchGroup(asset.Groups[0].GUID);
+            }
             editorView.hideFlags = UnityEngine.HideFlags.HideAndDontSave;
             return editorView;
         }

@@ -94,7 +94,6 @@ namespace FrameLine
         {
             return SelectedActions.Contains(action.GUID);
         }
-        public virtual void OnAddCreateMenue(GenericMenu menu) { }
         public virtual void RegistUndo(string name, bool needSave = true)
         {
             Undo.RegisterCompleteObjectUndo(Asset, name);
@@ -193,7 +192,7 @@ namespace FrameLine
         protected virtual void DrawTrackHead()
         {
             var size = _headView.layout.size;
-            if (float.IsNaN(size.x))
+            if (float.IsNaN(size.x) || Group == null)
                 return;
             VisableFrameStart = Mathf.FloorToInt(ScrollPos.x / ViewStyles.FrameWidth);
             VisableTrackStart = Mathf.FloorToInt(ScrollPos.y / (ViewStyles.FrameWidth + ViewStyles.ClipVInterval));
@@ -211,7 +210,7 @@ namespace FrameLine
         protected virtual void DrawTrack()
         {
             var size = _trackView.layout.size;
-            if (float.IsNaN(size.x))
+            if (float.IsNaN(size.x) || Group == null)
                 return;
             VisableFrameEnd = Mathf.CeilToInt((size.x + ScrollPos.x - VisableFrameStart * ViewStyles.FrameWidth) / ViewStyles.FrameWidth) + VisableFrameStart;
             using (new GUI.ClipScope(new Rect(Vector2.zero, size)))

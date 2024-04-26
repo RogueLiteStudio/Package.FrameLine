@@ -5,6 +5,7 @@ namespace FrameLine
     public class FrameLineAsset : ScriptableObject
     {
         public string Comment;
+        [HideInInspector]
         public List<FrameActionGroup> Groups = new List<FrameActionGroup>();
 
         public FrameActionGroup FindGroup(string id)
