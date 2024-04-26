@@ -10,6 +10,11 @@ namespace FrameLine
         protected List<FrameLineSceneObject> sceneObjects = new List<FrameLineSceneObject>();
         [SerializeField]
         protected string currentGroupGUID;
+        [SerializeField]
+        protected List<SimulateObject> simulateObjects = new List<SimulateObject>();
+
+        public FrameLineSceneObject CurrentActionObject { get; private set; }
+
         public virtual void OnDestroy()
         {
             foreach (var obj in sceneObjects)
@@ -58,7 +63,27 @@ namespace FrameLine
                 }
             }
             OnBeforSimulate(group, frameIndex);
-
+            foreach (var action in group.Actions)
+            {
+                CurrentActionObject = null;
+                if (action.Data is ISimulateable simulateable)
+                {
+                    bool isValid = action.Enable && action.StartFrame <= frameIndex
+                            && (action.Length <= 0 || action.StartFrame + action.Length >= frameIndex);
+                    var sceneObject = sceneObjects.Find(it => it.ClipGUID == action.GUID);
+                    if (isValid && sceneObject == null)
+                    {
+                        sceneObject = new FrameLineSceneObject { ClipGUID = action.GUID };
+                        sceneObjects.Add(sceneObject);
+                    }
+                    if (!isValid)
+                    {
+                        sceneObject?.SetActive(false);
+                        continue;
+                    }
+                    sceneObject.SetActive(true);
+                }
+            }
         }
         protected virtual bool IsSlecected(FrameAction action) { return false; }
         protected virtual void OnBeforSimulate(FrameActionGroup group, int frameIndex) { }
