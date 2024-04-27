@@ -51,7 +51,7 @@ namespace FrameLine
                         {
                             do 
                             {
-                                if (action.Data is not IFrameEvent)
+                                if (action.Data is not IFrameKeyEvent)
                                 {
                                     float frameOffset = point.x % ViewStyles.FrameWidth;
                                     if (frameOffset <= ViewStyles.ClipCtrlWidth && action.StartFrame == hitFrame)
@@ -212,7 +212,7 @@ namespace FrameLine
                     return true;
                 }
             }
-            if (e.button == 0)
+            if (e.button == 0 || e.button == 1)
             {
                 bool isMultSelect = (e.modifiers & (EventModifiers.Control | EventModifiers.Command)) != 0;
                 if (e.type == EventType.MouseDown)
@@ -225,6 +225,17 @@ namespace FrameLine
                                 EditorView.SelectedActions.Clear();
                             return true;
                         case FrameActionHitPartType.Normal:
+                            //alt键选择clip内关键帧,暂时不支持多选关键帧
+                            if (!isMultSelect && e.alt && hitTest.Action is IFrameLineClipDraw clipDraw)
+                            {
+                                int frameOffset = hitTest.Frame - hitTest.Action.StartFrame;
+                                var op = clipDraw.OnDragEvent(EditorView, frameOffset);
+                                if (op != null)
+                                {
+                                    dragOperate = op;
+                                    return true;
+                                }
+                            }
                             if (isMultSelect)
                             {
                                 int selectedIdx = EditorView.SelectedActions.IndexOf(hitTest.Action.GUID);
@@ -260,11 +271,20 @@ namespace FrameLine
             }
             if (e.button == 1)
             {
-                if (e.type == EventType.MouseDown)
+                if (e.type == EventType.MouseUp)
                 {
                     if (EditorView.SelectedActions.Count > 0)
                     {
                         GenericMenu menu = new GenericMenu();
+                        if (EditorView.SelectedActions.Count == 1)
+                        {
+                            var action = EditorView.Group.Actions.Find((a) => a.GUID == EditorView.SelectedActions[0]);
+                            if (action != null && action.Data is IFrameLineClipMenu clipMenu)
+                            {
+                                int hitFrame = FrameLineUtil.PosToFrame(e.mousePosition.x);
+                                clipMenu.OnClipMenu(EditorView, menu, hitFrame - action.StartFrame);
+                            }
+                        }
                         EditorView.OnSelectActionMenue(menu);
                         menu.AddItem(new GUIContent("设置时长到动画结束"), false, () => EditorView.SetSelectLengthToEnd());
                         menu.AddSeparator("");

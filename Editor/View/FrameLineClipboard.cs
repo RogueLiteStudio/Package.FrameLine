@@ -42,7 +42,7 @@ namespace FrameLine
             int index = ActionDataClips.FindIndex(it => it.TypeGUID == action.TypeGUID);
             if (index >= 0)
             {
-                var data = TypeSerializerHelper.Deserialize(ActionDataClips[index]) as IFrameEvent;
+                var data = TypeSerializerHelper.Deserialize(ActionDataClips[index]) as IFrameKeyEvent;
                 action.SetData(data);
             }
         }

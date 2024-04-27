@@ -39,6 +39,7 @@ namespace FrameLine
                 Name = GetTypeShowName(type),
             };
             action.SetData(System.Activator.CreateInstance(type) as IFrameAction);
+            action.Data.OnCreate();
             group.Actions.Add(action);
             return action;
         }

@@ -8,13 +8,17 @@ namespace FrameLine
         public bool OnGUI(FrameLineEditorView editorView, Vector2 size)
         {
             int framCount = editorView.Group.FrameCount;
-            int actionMaxFrame = framCount + 50;
+            int actionMaxFrame = Mathf.Max(framCount + 2, Mathf.RoundToInt((size.x - 20) / ViewStyles.FrameWidth));
             bool repaint = false;
             foreach (var action in editorView.Group.Actions)
             {
                 if (action.Length > 0)
                 {
                     actionMaxFrame = Mathf.Max(actionMaxFrame, action.StartFrame + action.Length);
+                }
+                else
+                {
+                    actionMaxFrame = Mathf.Max(actionMaxFrame, action.StartFrame);
                 }
             }
             //actionMaxFrame是为了兼容Group的FrameCount被修改，Action的StartFrame或者EndFrame超出区域

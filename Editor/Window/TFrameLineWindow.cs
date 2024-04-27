@@ -6,24 +6,7 @@ namespace FrameLine
     public class TFrameLineWindow<TAsset> : FrameLineWindow where TAsset : FrameLineAsset
     {
         private ObjectField assetSelect;
-        public TAsset Graph => EditorView.Asset as TAsset;
-
-        protected virtual void OnEnable()
-        {
-            UnityEditor.Undo.undoRedoPerformed += OnUndoRedo;
-        }
-
-        protected virtual void OnDisable()
-        {
-            UnityEditor.Undo.undoRedoPerformed -= OnUndoRedo;
-        }
-        protected virtual void OnUndoRedo()
-        {
-            if (EditorView)
-            {
-                EditorView.RefreshView();
-            }
-        }
+        public TAsset Asset => currentAsset as TAsset;
 
         public override void OnOpenAsset(FrameLineAsset asset)
         {
@@ -54,7 +37,7 @@ namespace FrameLine
 
             if (EditorView)
             {
-                assetSelect.SetValueWithoutNotify(Graph);
+                assetSelect.SetValueWithoutNotify(Asset);
             }
             assetSelect.RegisterValueChangedCallback(OnGraphSelectChange);
             TopToolbar.Add(assetSelect);

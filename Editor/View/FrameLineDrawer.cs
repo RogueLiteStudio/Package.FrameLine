@@ -145,7 +145,7 @@ namespace FrameLine
                     float offsetX = action.StartFrame * ViewStyles.FrameWidth;
                     int frameCount = action.Length;
                     
-                    if (action.Data is IFrameEvent)
+                    if (action.Data is IFrameKeyEvent)
                     {
                         frameCount = 1;
                     }
@@ -157,6 +157,7 @@ namespace FrameLine
                     GUIRenderHelper.DrawRect(clipRect, ViewStyles.InvalidClipColor, 5, BorderType.All);
                 }
             }
+            var point = Event.current.mousePosition;
             for (int i = 0; i < track.Count; ++i)
             {
                 var action = editorView.Group.Find(track.Actions[i]);
@@ -167,7 +168,7 @@ namespace FrameLine
                 float offsetY = viewOffsetY + i * ViewStyles.TrackHeight;
                 float offsetX = action.StartFrame * ViewStyles.FrameWidth;
                 int frameCount = action.Length;
-                if (action.Data is IFrameEvent)
+                if (action.Data is IFrameKeyEvent)
                 {
                     frameCount = 1;
                 }
@@ -176,7 +177,7 @@ namespace FrameLine
                     frameCount = editorView.FrameCount - action.StartFrame;
                 }
                 Rect fullRect = new Rect(offsetX, offsetY, ViewStyles.FrameWidth * frameCount, ViewStyles.ClipHeight);
-                if (action.Data is IFrameEvent)
+                if (action.Data is IFrameKeyEvent)
                 {
                     //事件类型Action
                     //画背景
@@ -198,21 +199,28 @@ namespace FrameLine
                     GUIRenderHelper.DrawRect(colorRect, track.TypeColor, ViewStyles.ClipCtrlWidth, BorderType.Bottom);
                     //左侧控制区域
                     FrameActionHitPartType dragPart = editorView.EventHandler.GetDragePart(action);
-                    if (dragPart == FrameActionHitPartType.LeftCtrl)
+                    if (action.Data is IFrameLineClipDraw draw)
                     {
-                        Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);
+                        using(new GUI.ClipScope(fullRect))
+                        {
+                            draw.OnDrawClip(editorView, fullRect.size);
+                        }
+                    }
+                    Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);
+                    if (dragPart == FrameActionHitPartType.LeftCtrl || clipLeftCtrlRect.Contains(point))
+                    {
                         GUIRenderHelper.DrawRect(clipLeftCtrlRect, ViewStyles.ClipSelectCtrlColor, ViewStyles.ClipCtrlWidth, BorderType.Left);
                     }
                     //右侧
                     int clipEndFrame = action.StartFrame + frameCount - 1;
                     if (action.Length > 0)
                     {
-                        if (dragPart == FrameActionHitPartType.RightCtrl)
+                        Rect clipRightCtrlRect = new Rect((clipEndFrame + 1) * ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth,
+                            offsetY,
+                            ViewStyles.ClipCtrlWidth,
+                            ViewStyles.ClipHeight);
+                        if (dragPart == FrameActionHitPartType.RightCtrl || clipRightCtrlRect.Contains(point))
                         {
-                            Rect clipRightCtrlRect = new Rect((clipEndFrame + 1) * ViewStyles.FrameWidth - ViewStyles.ClipCtrlWidth,
-                                offsetY,
-                                ViewStyles.ClipCtrlWidth,
-                                ViewStyles.ClipHeight);
                             GUIRenderHelper.DrawRect(clipRightCtrlRect, ViewStyles.ClipSelectCtrlColor, ViewStyles.ClipCtrlWidth, BorderType.Right);
                         }
                     }
@@ -220,6 +228,13 @@ namespace FrameLine
                 if (editorView.IsSlecected(action))
                 {
                     GUIRenderHelper.DrawWireRect(fullRect, ViewStyles.SelectClipWireFrameColor, ViewStyles.ClipCtrlWidth, BorderType.All);
+                }
+                if (fullRect.Contains(point))
+                {
+                    int frame = Mathf.FloorToInt(point.x / editorView.FrameWidth);
+                    Vector2 start = new Vector2(frame * editorView.FrameWidth, fullRect.y + 1);
+                    Vector2 end = new Vector2((frame + 1) * editorView.FrameWidth, fullRect.y + 1);
+                    GUIRenderHelper.DrawLine(start, end, Color.white, 3);
                 }
             }
         }

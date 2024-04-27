@@ -11,7 +11,7 @@ namespace FrameLine
         }
         public static int GetActionEndFrame(FrameActionGroup group, FrameAction action)
         {
-            if (action.Data is IFrameEvent)
+            if (action.Data is IFrameKeyEvent)
             {
                 return action.StartFrame;
             }

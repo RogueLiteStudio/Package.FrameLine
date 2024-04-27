@@ -43,6 +43,8 @@ namespace FrameLine
 
         public int CurrentFrame;
         public Vector2 ScrollPos;
+        public float FrameWidth => ViewStyles.FrameWidth;
+        public float ClipHeight=> ViewStyles.ClipHeight;
         public bool IsPlaying { get; set; }
         public float FramePassTime { get; set; }
         public int FrameCount => Group.FrameCount;
@@ -68,6 +70,7 @@ namespace FrameLine
                     _rootView = new TwoPaneSplitView(0, ViewStyles.TrackHeadWidth, TwoPaneSplitViewOrientation.Horizontal);
                     _rootView.Add(_headView = new IMGUIContainer(DrawTrackHead));
                     _rootView.Add(_trackView = new IMGUIContainer(DrawTrack));
+                    _trackView.RegisterCallback<MouseMoveEvent>((evt) => _trackView.MarkDirtyRepaint());
                 }
                 return _rootView;
             }

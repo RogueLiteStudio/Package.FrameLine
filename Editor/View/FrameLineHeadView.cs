@@ -34,65 +34,46 @@ namespace FrameLine
         {
             using (new EditorGUI.DisabledScope(editorView.Group == null || editorView.Group.FrameCount < 1))
             {
-                using(new GUILayout.VerticalScope(GUILayout.Height(ViewStyles.FrameBarHeight)))
+                using (new GUILayout.HorizontalScope(GUILayout.Height(ViewStyles.FrameBarHeight)))
                 {
-                    using (new GUILayout.HorizontalScope())
+                    //后退按钮
+                    if (GUILayout.Button(BuiltInIcon.Instance.PrevKey, EditorStyles.toolbarButton))
                     {
-                        //后退按钮
-                        if (GUILayout.Button(BuiltInIcon.Instance.PrevKey, EditorStyles.toolbarButton))
-                        {
-                            editorView.CurrentFrame = Mathf.Max(0, editorView.CurrentFrame - 1);
-                            editorView.FramePassTime = 0;
-                            editorView.ScrollToFrame(editorView.CurrentFrame);
-                        }
-                        //播放暂停按钮
-                        if (GUILayout.Button(editorView.IsPlaying ? BuiltInIcon.Instance.Pause : BuiltInIcon.Instance.Play, EditorStyles.toolbarButton))
-                        {
-                            editorView.IsPlaying = !editorView.IsPlaying;
-                            editorView.FramePassTime = 0;
-                        }
-                        //前进按钮
-                        if (GUILayout.Button(BuiltInIcon.Instance.NextKey, EditorStyles.toolbarButton))
-                        {
-                            editorView.CurrentFrame = Mathf.Min(editorView.Group.FrameCount, editorView.CurrentFrame + 1);
-                            editorView.FramePassTime = 0;
-                            editorView.ScrollToFrame(editorView.CurrentFrame);
-                        }
-                        GUILayout.FlexibleSpace();
-                        if (GUILayout.Button(BuiltInIcon.Instance.Add, EditorStyles.toolbarButton))
-                        {
-                            var types = FrameLineProcess.GetActionTypes(editorView.Asset);
-                            if (types != null && types.Count > 0)
-                            {
-                                GenericMenu menu = new GenericMenu();
-                                foreach (var t in types)
-                                {
-                                    menu.AddItem(new GUIContent(FrameLineUtil.GetTypeShowName(t)), false, (createType) => 
-                                    {
-                                        editorView.RegistUndo("create action");
-                                        var action = FrameLineUtil.CreateAction(editorView.Group, (System.Type)createType, editorView.CurrentFrame, 1);
-                                        editorView.SelectedActions.Clear();
-                                        editorView.SelectedActions.Add(action.GUID);
-                                        editorView.RebuildTrack();
-                                        editorView.ScrollToFrame(editorView.CurrentFrame);
-                                    }, t);
-                                }
-                                menu.ShowAsContext();
-                            }
-                        }
+                        editorView.CurrentFrame = Mathf.Max(0, editorView.CurrentFrame - 1);
+                        editorView.FramePassTime = 0;
+                        editorView.ScrollToFrame(editorView.CurrentFrame);
                     }
-                    if (GUILayout.Button(editorView.Group.Name, EditorStyles.toolbarButton))
+                    //播放暂停按钮
+                    if (GUILayout.Button(editorView.IsPlaying ? BuiltInIcon.Instance.Pause : BuiltInIcon.Instance.Play, EditorStyles.toolbarButton))
                     {
-                        if (editorView.Asset.Groups.Count > 1)
+                        editorView.IsPlaying = !editorView.IsPlaying;
+                        editorView.FramePassTime = 0;
+                    }
+                    //前进按钮
+                    if (GUILayout.Button(BuiltInIcon.Instance.NextKey, EditorStyles.toolbarButton))
+                    {
+                        editorView.CurrentFrame = Mathf.Min(editorView.Group.FrameCount, editorView.CurrentFrame + 1);
+                        editorView.FramePassTime = 0;
+                        editorView.ScrollToFrame(editorView.CurrentFrame);
+                    }
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(BuiltInIcon.Instance.Add, EditorStyles.toolbarButton))
+                    {
+                        var types = FrameLineProcess.GetActionTypes(editorView.Asset);
+                        if (types != null && types.Count > 0)
                         {
                             GenericMenu menu = new GenericMenu();
-                            foreach (var group in editorView.Asset.Groups)
+                            foreach (var t in types)
                             {
-                                menu.AddItem(new GUIContent(group.Name), group.GUID == editorView.GroupId, (g) =>
+                                menu.AddItem(new GUIContent(FrameLineUtil.GetTypeShowName(t)), false, (createType) => 
                                 {
-                                    editorView.RegistUndo("switch group", false);
-                                    editorView.SwitchGroup((string)g);
-                                }, group.GUID);
+                                    editorView.RegistUndo("create action");
+                                    var action = FrameLineUtil.CreateAction(editorView.Group, (System.Type)createType, editorView.CurrentFrame, 1);
+                                    editorView.SelectedActions.Clear();
+                                    editorView.SelectedActions.Add(action.GUID);
+                                    editorView.RebuildTrack();
+                                    editorView.ScrollToFrame(editorView.CurrentFrame);
+                                }, t);
                             }
                             menu.ShowAsContext();
                         }

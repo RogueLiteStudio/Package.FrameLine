@@ -53,6 +53,17 @@ namespace FrameLine
             }
             return null;
         }
+
+        public static Type GetEditorViewType(FrameLineAsset asset)
+        {
+            var type = asset.GetType();
+            if (Process.TryGetValue(type, out var proc))
+            {
+                return proc.EditorViewType;
+            }
+            return typeof(FrameLineEditorView);
+        }
+
         public static FrameLineAsset OnAssetCreateAction(Type assetType)
         {
             if (Process.TryGetValue(assetType, out var proc))
@@ -83,7 +94,7 @@ namespace FrameLine
                     {
                         foreach (var t in assemble.GetTypes())
                         {
-                            if (t.IsInterface || t.IsAbstract)
+                            if (t.IsInterface || t.IsAbstract || t.IsGenericType)
                                 continue;
                             if (proc.CheckIsValidNodeType(t))
                             {

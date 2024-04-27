@@ -9,7 +9,7 @@ namespace FrameLine
         public const float ScrollBarSize = 15;
         public const float FrameWidth = 25;//帧宽度
         public const float ClipCtrlWidth = 5;//帧片段左右控制滑块宽度
-        public const float FrameBarHeight = 42;//顶部时间条高度
+        public const float FrameBarHeight = 21;//顶部时间条高度
         public const float ClipHeight = 30;//帧片段高度
         public const float ClipColorHeight = 5;//帧片段底部颜色条高度
         public const float ClipVInterval = 3;//帧片段垂直间隔

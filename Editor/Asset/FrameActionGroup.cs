@@ -9,6 +9,7 @@ namespace FrameLine
         public string Name;
         public string Description;
         public int FrameCount;
+        public bool Disable;
         public List<FrameAction> Actions = new List<FrameAction>();
 
         public FrameAction Find(string id)
