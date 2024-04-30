@@ -203,7 +203,7 @@ namespace FrameLine
                     {
                         using(new GUI.ClipScope(fullRect))
                         {
-                            draw.OnDrawClip(editorView, fullRect.size);
+                            draw.OnDrawClip(editorView, fullRect.size, frameCount);
                         }
                     }
                     Rect clipLeftCtrlRect = new Rect(offsetX, offsetY, ViewStyles.ClipCtrlWidth, ViewStyles.ClipHeight);
