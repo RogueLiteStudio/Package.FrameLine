@@ -16,6 +16,7 @@ namespace FrameLine
         public Vector2 ClickPos;
         public FrameAction Action;
         public FrameActionHitPartType HitPart;
+        public Vector2 LocalPos;
         public int Frame;
     }
 

@@ -68,6 +68,8 @@ namespace FrameLine
                                 result.HitPart = FrameActionHitPartType.Normal;
                             } while (false);
                             result.Action = action;
+                            result.LocalPos.x = point.x - hitFrame * ViewStyles.FrameWidth;
+                            result.LocalPos.y = point.y - hitTrackIndex * ViewStyles.TrackHeight;
                         }
                     }
                     if (result.Action != null)
@@ -226,10 +228,10 @@ namespace FrameLine
                             return true;
                         case FrameActionHitPartType.Normal:
                             //alt键选择clip内关键帧,暂时不支持多选关键帧
-                            if (!isMultSelect && e.alt && hitTest.Action is IFrameLineClipDraw clipDraw)
+                            if (!isMultSelect && e.alt && hitTest.Action.Data is IFrameLineClipDraw clipDraw)
                             {
                                 int frameOffset = hitTest.Frame - hitTest.Action.StartFrame;
-                                var op = clipDraw.OnDragEvent(EditorView, frameOffset);
+                                var op = clipDraw.OnDragEvent(EditorView, frameOffset, hitTest);
                                 if (op != null)
                                 {
                                     dragOperate = op;
