@@ -23,7 +23,7 @@ namespace FrameLine
         }
     }
 
-    public abstract class FrameLineSimulate : ScriptableObject
+    public abstract class FrameLineSimulator : ScriptableObject
     {
         protected struct Simulator
         {
@@ -37,17 +37,51 @@ namespace FrameLine
         protected List<Simulator> simulators = new List<Simulator>();
         [SerializeField]
         protected string currentGroupGUID;
+        [SerializeField]
+        protected FrameLineAsset asset;
+        [SerializeField]
+        private List<FrameLineSimulator> children = new List<FrameLineSimulator>();
 
         private bool needRebuild = true;
+
+        public static T CreateSimulate<T>(FrameLineAsset asset, FrameLineSimulator parent) where T : FrameLineSimulator
+        {
+            var s = CreateInstance<T>();
+            s.asset = asset;
+            s.hideFlags = HideFlags.HideAndDontSave;
+            s.SceneRoot = new GameObject($"[{asset.name}]-预览").transform;
+            if (parent)
+            {
+                parent.children.Add(s);
+                s.SceneRoot.SetParent(parent.SceneRoot);
+            }
+            s.SceneRoot.gameObject.hideFlags = HideFlags.DontSave;
+            s.OnInitialize();
+            return s;
+        }
+
+        public static FrameLineSimulator CreateSimulate(FrameLineAsset asset, FrameLineSimulator parent)
+        {
+            var t = FrameLineProcess.GetSimulatorType(asset);
+            if (t == null)
+                return null;
+            var s = CreateInstance(t) as FrameLineSimulator;
+            s.asset = asset;
+            s.hideFlags = HideFlags.HideAndDontSave;
+            s.SceneRoot = new GameObject($"[{asset.name}]-预览").transform;
+            if (parent)
+            {
+                parent.children.Add(s);
+                s.SceneRoot.SetParent(parent.SceneRoot);
+            }
+            s.SceneRoot.gameObject.hideFlags = HideFlags.DontSave;
+            s.OnInitialize();
+            return s;
+        }
 
         public void MarkReBuild()
         {
             needRebuild = true;
-        }
-
-        protected virtual void OnEnable()
-        {
-            hideFlags = HideFlags.DontSave;
         }
 
         protected virtual void OnDisable()
@@ -57,6 +91,20 @@ namespace FrameLine
                 s.ActionSimulator.OnDispose(this, s.Action);
             }
             simulators.Clear();
+        }
+
+        protected virtual void OnDestroy()
+        {
+            foreach (var child in children)
+            {
+                if (child)
+                    DestroyImmediate(child);
+            }
+            children.Clear();
+            if (SceneRoot)
+            {
+                DestroyImmediate(SceneRoot.gameObject);
+            }
         }
 
         public bool RefreshResource<T>(string key, ref SimulateResource<T> res) where T : Object
@@ -163,8 +211,13 @@ namespace FrameLine
             simulators.Clear();
             simulators.AddRange(cache);
         }
-
+        protected virtual void OnInitialize() { }
         protected virtual void OnBeforSimulate(FrameActionGroup group, int frameIndex) { }
         protected virtual void OnAfterSimulate(FrameActionGroup group, int frameIndex) { }
+    }
+
+    public abstract class TFrameLineSimulator<T> : FrameLineSimulator where T : FrameLineAsset
+    {
+        public T Asset => asset as T;
     }
 }

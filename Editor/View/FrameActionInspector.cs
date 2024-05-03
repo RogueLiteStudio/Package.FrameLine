@@ -131,7 +131,7 @@ namespace FrameLine
                 }
             }
         }
-        protected void LayoutGUI<T>(string label, ref T v, Func<T, GUILayoutOption[], T> func, params GUILayoutOption[] options)
+        protected bool LayoutGUI<T>(string label, ref T v, Func<T, GUILayoutOption[], T> func, params GUILayoutOption[] options)
         {
             using (new GUILayout.HorizontalScope())
             {
@@ -142,8 +142,10 @@ namespace FrameLine
                 {
                     EditorView.OnPropertyModify();
                     v = newVal;
+                    return true;
                 }
             }
+            return false;
         }
         protected virtual void DrawActionInspector()
         {

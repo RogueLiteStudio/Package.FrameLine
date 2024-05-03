@@ -362,7 +362,7 @@ namespace FrameLine
         protected virtual void DrawAssetInspector()
         {
         }
-        protected void LayoutGUI<T>(string label, ref T v, System.Func<T, GUILayoutOption[], T> func, params GUILayoutOption[] options)
+        protected bool LayoutGUI<T>(string label, ref T v, System.Func<T, GUILayoutOption[], T> func, params GUILayoutOption[] options)
         {
             using(new GUILayout.HorizontalScope())
             {
@@ -373,8 +373,10 @@ namespace FrameLine
                 {
                     OnPropertyModify();
                     v = newVal;
+                    return true;
                 }
             }
+            return false;
         }
     }
 }

@@ -19,28 +19,28 @@
 
     public interface IActionSimulator
     {
-        void OnCreate(FrameLineSimulate context, FrameAction action);
-        void OnUpdate(FrameLineSimulate context, FrameAction action, SimulateFrameData frameData);
-        void OnDispose(FrameLineSimulate context, FrameAction action);
+        void OnCreate(FrameLineSimulator context, FrameAction action);
+        void OnUpdate(FrameLineSimulator context, FrameAction action, SimulateFrameData frameData);
+        void OnDispose(FrameLineSimulator context, FrameAction action);
     }
 
     public abstract class TActionSimulator<TSimulate, TAction> : IActionSimulator
-        where TSimulate : FrameLineSimulate
+        where TSimulate : FrameLineSimulator
         where TAction : IFrameAction
     {
         protected TSimulate context;
-        public void OnCreate(FrameLineSimulate context, FrameAction action)
+        public void OnCreate(FrameLineSimulator context, FrameAction action)
         {
             this.context = context as TSimulate;
             OnCreate((TAction)action.Data);
         }
 
-        public void OnUpdate(FrameLineSimulate context, FrameAction action, SimulateFrameData frameData)
+        public void OnUpdate(FrameLineSimulator context, FrameAction action, SimulateFrameData frameData)
         {
             OnUpdate((TAction)action.Data, frameData);
         }
 
-        public void OnDispose(FrameLineSimulate context, FrameAction action)
+        public void OnDispose(FrameLineSimulator context, FrameAction action)
         {
             OnDispose((TAction)action.Data);
         }

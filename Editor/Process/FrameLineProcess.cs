@@ -64,6 +64,16 @@ namespace FrameLine
             return typeof(FrameLineEditorView);
         }
 
+        public static Type GetSimulatorType(FrameLineAsset asset)
+        {
+            var type = asset.GetType();
+            if (Process.TryGetValue(type, out var proc))
+            {
+                return proc.SimulatorType;
+            }
+            return null;
+        }
+
         public static FrameLineAsset OnAssetCreateAction(Type assetType)
         {
             if (Process.TryGetValue(assetType, out var proc))
