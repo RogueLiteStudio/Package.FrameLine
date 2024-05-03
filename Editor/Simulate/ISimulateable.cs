@@ -2,7 +2,7 @@
 {
     public interface ISimulateable
     {
-        public void Simulate(FrameLineSimulate simulate, int frameOffset, int length);
+        System.Type GetSimulatorType();
     }
 
     public interface IGizmosable

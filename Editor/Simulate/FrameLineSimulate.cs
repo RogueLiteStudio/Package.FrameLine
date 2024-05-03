@@ -1,91 +1,171 @@
 ﻿using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace FrameLine
 {
+    [System.Serializable]
+    public struct SimulateResource
+    {
+        public string Key;
+        public string ActionGUID;
+        public Object Resource;
+    }
+
     public abstract class FrameLineSimulate : ScriptableObject
     {
+        protected struct Simulator
+        {
+            public string GUID;
+            public bool IsUpdate;
+            public FrameAction Action;
+            public IActionSimulator ActionSimulator;
+        }
         public Transform SceneRoot;
         [SerializeField]
-        protected List<FrameLineSceneObject> sceneObjects = new List<FrameLineSceneObject>();
+        protected List<SimulateResource> resources = new List<SimulateResource>();
+        [SerializeField]
+        protected List<Simulator> simulators = new List<Simulator>();
         [SerializeField]
         protected string currentGroupGUID;
-        [SerializeField]
-        protected List<SimulateObject> simulateObjects = new List<SimulateObject>();
 
-        public FrameLineSceneObject CurrentActionObject { get; private set; }
+        private bool needRebuild = true;
 
-        public virtual void OnDestroy()
+        public void MarkReBuild()
         {
-            foreach (var obj in sceneObjects)
-            {
-                obj.Destroy();
-            }
-            sceneObjects.Clear();
+            needRebuild = true;
         }
 
-        public virtual void OnSceneGUI(FrameActionGroup group, int frameIndex)
+        protected virtual void OnDisable()
         {
-            foreach (var action in group.Actions)
+            foreach (var s in simulators)
             {
-                if (action.Enable && action.Data is IGizmosable gizmosable)
+                s.ActionSimulator.OnDispose(this, s.Action);
+            }
+            simulators.Clear();
+        }
+
+        protected virtual void OnDestroy()
+        {
+            foreach (var s in resources)
+            {
+                if (s.Resource)
                 {
-                    int length = action.Length;
-                    if (length <= 0)
+                    string path = AssetDatabase.GetAssetPath(s.Resource);
+                    if (string.IsNullOrEmpty(path))
                     {
-                        length = group.FrameCount - action.StartFrame;
+                        DestroyImmediate(s.Resource);
                     }
-                    int offset = frameIndex - action.StartFrame;
-                    bool isSelcect = IsSlecected(action);
-                    gizmosable.DrawGizmos(this, isSelcect, offset, length);
                 }
             }
+            resources.Clear();
         }
-        public void Simulate(FrameActionGroup group, int frameIndex)
+
+        public T GetResource<T>(string guid, string key) where T : Object
         {
-            if (currentGroupGUID != group.GUID)
+            int idx = resources.FindIndex(it => it.Key == key && it.ActionGUID == guid);
+            if (idx >= 0)
             {
-                currentGroupGUID = group.GUID;
-                foreach (var obj in sceneObjects)
-                {
-                    obj.Destroy();
-                }
-                sceneObjects.Clear();
+                return resources[idx].Resource as T;
             }
-            //清理已经被删除的Action
-            for (int i = sceneObjects.Count - 1; i >= 0; --i)
+            var res = LoadResource<T>(key);
+            resources.Add(new SimulateResource { Key = key, ActionGUID = guid, Resource = res });
+            return null;
+        }
+
+        protected abstract T LoadResource<T>(string path) where T : Object;
+
+        public void Simulate(FrameActionGroup group, int frameIndex, List<string> selectedActions)
+        {
+            if (needRebuild)
             {
-                var obj = sceneObjects[i];
-                if (!group.Actions.Exists(it => it.GUID == obj.ClipGUID))
-                {
-                    obj.Destroy();
-                    sceneObjects.RemoveAt(i);
-                }
+                ReBuild(group);
             }
             OnBeforSimulate(group, frameIndex);
-            foreach (var action in group.Actions)
+            for (int i=0; i<simulators.Count; ++i)
             {
-                CurrentActionObject = null;
-                if (action.Data is ISimulateable simulateable)
+                var s = simulators[i];
+                s.Action = group.Find(s.GUID);
+                if (s.Action == null)
                 {
-                    bool isValid = action.Enable && action.StartFrame <= frameIndex
-                            && (action.Length <= 0 || action.StartFrame + action.Length >= frameIndex);
-                    var sceneObject = sceneObjects.Find(it => it.ClipGUID == action.GUID);
-                    if (isValid && sceneObject == null)
+                    s.ActionSimulator.OnDispose(this, s.Action);
+                    simulators.RemoveAt(i);
+                    --i;
+                    continue;
+                }
+                bool isSelect = selectedActions == null || selectedActions.Contains(s.Action.GUID);
+                bool isInAction = s.Action.StartFrame <= frameIndex && (s.Action.Length <= 0 || s.Action.StartFrame + s.Action.Length > frameIndex);
+                if (!isInAction && !s.IsUpdate)
+                    continue;
+                ActionSimulateState state = ActionSimulateState.Update;
+                if (!isInAction)
+                {
+                    if (s.IsUpdate)
                     {
-                        sceneObject = new FrameLineSceneObject { ClipGUID = action.GUID };
-                        sceneObjects.Add(sceneObject);
+                        s.IsUpdate = false;
+                        state = ActionSimulateState.Exit;
                     }
-                    if (!isValid)
+                }
+                else
+                {
+                    if (!s.IsUpdate)
                     {
-                        sceneObject?.SetActive(false);
+                        s.IsUpdate = true;
+                        state = ActionSimulateState.Start;
+                    }
+                }
+
+                SimulateFrameData frameData = new SimulateFrameData
+                {
+                    FrameOffset = frameIndex - s.Action.StartFrame,
+                    Length = s.Action.Length,
+                    FrameTime = 1 / 30f,
+                    IsSelected = isSelect,
+                    State = state,
+                };
+                s.ActionSimulator.OnUpdate(this, s.Action, frameData);
+                simulators[i] = s;
+            }
+            OnAfterSimulate(group, frameIndex);
+        }
+
+        protected void ReBuild(FrameActionGroup group)
+        {
+            List<Simulator> cache = new List<Simulator>();
+            foreach (var a in group.Actions)
+            {
+                if (a.Data is not ISimulateable simulateable)
+                    continue;
+                int idx = simulators.FindIndex(it => it.GUID == a.GUID);
+                if (idx >= 0)
+                {
+                    var s = simulators[idx];
+                    if (s.ActionSimulator.GetType() == simulateable.GetSimulatorType())
+                    {
+                        s.Action = a;
+                        cache.Add(s);
+                        simulators.RemoveAt(idx);
                         continue;
                     }
-                    sceneObject.SetActive(true);
                 }
+                var simulator = System.Activator.CreateInstance(simulateable.GetSimulatorType()) as IActionSimulator;
+                simulator.OnCreate(this, a);
+                var data = new Simulator
+                {
+                    GUID = a.GUID,
+                    Action = a,
+                    ActionSimulator = simulator,
+                };
+                cache.Add(data);
             }
+            foreach (var s in simulators)
+            {
+                s.ActionSimulator.OnDispose(this, s.Action);
+            }
+            simulators.Clear();
+            simulators.AddRange(cache);
         }
-        protected virtual bool IsSlecected(FrameAction action) { return false; }
+
         protected virtual void OnBeforSimulate(FrameActionGroup group, int frameIndex) { }
         protected virtual void OnAfterSimulate(FrameActionGroup group, int frameIndex) { }
     }
