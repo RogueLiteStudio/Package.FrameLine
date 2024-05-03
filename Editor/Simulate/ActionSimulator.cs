@@ -29,11 +29,9 @@
         where TAction : IFrameAction
     {
         protected TSimulate context;
-        protected string actionGUID;
         public void OnCreate(FrameLineSimulate context, FrameAction action)
         {
             this.context = context as TSimulate;
-            actionGUID = action.GUID;
             OnCreate((TAction)action.Data);
         }
 
@@ -45,11 +43,6 @@
         public void OnDispose(FrameLineSimulate context, FrameAction action)
         {
             OnDispose((TAction)action.Data);
-        }
-
-        protected T GetResource<T>(string key) where T : UnityEngine.Object
-        {
-            return context.GetResource<T>(actionGUID, key);
         }
 
         protected virtual void OnCreate(TAction action) { }

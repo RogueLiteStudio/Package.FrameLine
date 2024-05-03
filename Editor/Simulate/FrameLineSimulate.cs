@@ -4,12 +4,23 @@ using UnityEngine;
 
 namespace FrameLine
 {
-    [System.Serializable]
-    public struct SimulateResource
+    public struct SimulateResource<T> where T : Object
     {
-        public string Key;
-        public string ActionGUID;
-        public Object Resource;
+        internal string Key;
+        public T Resource;
+
+        public void Destroy()
+        {
+            if (Resource)
+            {
+                string path = AssetDatabase.GetAssetPath(Resource);
+                if (string.IsNullOrEmpty(path))
+                {
+                    Object.DestroyImmediate(Resource);
+                    Resource = null;
+                }
+            }
+        }
     }
 
     public abstract class FrameLineSimulate : ScriptableObject
@@ -23,8 +34,6 @@ namespace FrameLine
         }
         public Transform SceneRoot;
         [SerializeField]
-        protected List<SimulateResource> resources = new List<SimulateResource>();
-        [SerializeField]
         protected List<Simulator> simulators = new List<Simulator>();
         [SerializeField]
         protected string currentGroupGUID;
@@ -36,6 +45,11 @@ namespace FrameLine
             needRebuild = true;
         }
 
+        protected virtual void OnEnable()
+        {
+            hideFlags = HideFlags.DontSave;
+        }
+
         protected virtual void OnDisable()
         {
             foreach (var s in simulators)
@@ -45,41 +59,25 @@ namespace FrameLine
             simulators.Clear();
         }
 
-        protected virtual void OnDestroy()
+        public bool RefreshResource<T>(string key, ref SimulateResource<T> res) where T : Object
         {
-            foreach (var s in resources)
+            if (key != res.Key)
             {
-                if (s.Resource)
-                {
-                    string path = AssetDatabase.GetAssetPath(s.Resource);
-                    if (string.IsNullOrEmpty(path))
-                    {
-                        DestroyImmediate(s.Resource);
-                    }
-                }
+                res.Destroy();
+                res.Key = key;
+                res.Resource = LoadResource<T>(key);
             }
-            resources.Clear();
+            return res.Resource;
         }
 
-        public T GetResource<T>(string guid, string key) where T : Object
-        {
-            int idx = resources.FindIndex(it => it.Key == key && it.ActionGUID == guid);
-            if (idx >= 0)
-            {
-                return resources[idx].Resource as T;
-            }
-            var res = LoadResource<T>(key);
-            resources.Add(new SimulateResource { Key = key, ActionGUID = guid, Resource = res });
-            return null;
-        }
-
-        protected abstract T LoadResource<T>(string path) where T : Object;
+        public abstract T LoadResource<T>(string path) where T : Object;
 
         public void Simulate(FrameActionGroup group, int frameIndex, List<string> selectedActions)
         {
             if (needRebuild)
             {
                 ReBuild(group);
+                needRebuild = false;
             }
             OnBeforSimulate(group, frameIndex);
             for (int i=0; i<simulators.Count; ++i)

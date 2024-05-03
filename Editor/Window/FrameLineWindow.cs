@@ -31,7 +31,7 @@ namespace FrameLine
         public FrameLineEditorView EditorView;
         public Toolbar TopToolbar { get; protected set; }
         public VisualElement EditorViewRoot { get; protected set; }
-        public VisualElement InspectorView { get; protected set; }
+        public IMGUIContainer InspectorView { get; protected set; }
         protected RadioButtonList groupListView;
         protected virtual string UXMLPath => null;
         public void CreateGUI()
@@ -127,10 +127,15 @@ namespace FrameLine
                 splitTop.Add(CreateListView());
                 var split = new TwoPaneSplitView(1, 200, TwoPaneSplitViewOrientation.Horizontal);
                 split.Add(EditorViewRoot = new VisualElement());
-                split.Add(InspectorView = new VisualElement());
+                split.Add(InspectorView = new IMGUIContainer(DrawInspector));
                 splitTop.Add(split);
                 rootVisualElement.Add(splitTop);
             }
+        }
+
+        private void DrawInspector()
+        {
+            EditorView?.OnInspectorGUI();
         }
 
         protected VisualElement CreateListView()

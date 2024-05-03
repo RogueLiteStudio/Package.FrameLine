@@ -20,7 +20,7 @@ namespace FrameLine
         public int Frame;
     }
 
-    public class FrameLineEditorView : ScriptableObject
+    public class FrameLineEditorView : ScriptableObject, IPropertyEditorContext
     {
         public FrameLineAsset Asset;
         public FrameLineGUIEvent EventHandler;
@@ -72,6 +72,7 @@ namespace FrameLine
                     _rootView.Add(_headView = new IMGUIContainer(DrawTrackHead));
                     _rootView.Add(_trackView = new IMGUIContainer(DrawTrack));
                     _trackView.RegisterCallback<MouseMoveEvent>((evt) => _trackView.MarkDirtyRepaint());
+
                 }
                 return _rootView;
             }
@@ -230,7 +231,8 @@ namespace FrameLine
         public Vector2 InspectorActionGUIPos;
         public Vector2 InspectorBaseGUIPos;
         public int InspectorSelectTable;
-        private static string[] TabelNames = new string[] { "Action", "基础" };
+        private static string[] TabelNames = new string[] { "Action", "当前组", "资源" };
+        private Dictionary<string, FrameActionInspector> inspectors = new Dictionary<string, FrameActionInspector>();
         public void OnInspectorGUI()
         {
             InspectorSelectTable = GUILayout.Toolbar(InspectorSelectTable, TabelNames);
@@ -241,46 +243,63 @@ namespace FrameLine
                     InspectorActionGUIPos = scroll.scrollPosition;
                     using (new GUILayout.VerticalScope())
                     {
+                        foreach (var kv in inspectors)
+                        {
+                            if (kv.Value.IsFocus && SelectedActions.Contains(kv.Key))
+                            {
+                                kv.Value.IsFocus = false;
+                                kv.Value.OnFocusChanged(kv.Value.IsFocus);
+                            }
+                        }
                         if (SelectedActions.Count > 0)
                         {
-                            //foreach (var action in SelectedActions)
-                            //{
-                            //    action.Action.Editor.OnInspectorGUI(Asset, OnActionContextMenue);
-                            //}
+                            foreach (var action in SelectedActions)
+                            {
+                                var a = Group.Find(action);
+                                if (!inspectors.TryGetValue(action, out var inspector))
+                                {
+                                    inspector = FrameActionInspector.CreateInspector(this, a);
+                                    inspectors[action] = inspector;
+                                }
+                                inspector.Action = a;
+                                if (!inspector.IsFocus)
+                                {
+                                    inspector.IsFocus = true;
+                                    inspector.OnFocusChanged(inspector.IsFocus);
+                                }
+                                inspector.OnInsperctorGUI();
+                            }
                         }
                     }
                 }
             }
             else
             {
-                //using (var scroll = new EditorGUILayout.ScrollViewScope(InspectorBaseGUIPos))
-                //{
-                //    InspectorBaseGUIPos = scroll.scrollPosition;
-                //    using (new GUILayout.VerticalScope())
-                //    {
-                //        Editor?.Draw();
-                //        if (Group != null)
-                //        {
-                //            GUILayout.Space(20);
-                //            GUILayout.Label("当前组：", EditorStyles.boldLabel);
-                //            Group.Drawer?.Draw(null, Group, Asset);
-                //        }
-                //    }
-                //}
+                if (InspectorSelectTable == 2 || Group == null)
+                {
+                    LayoutGUI("描述", ref Asset.Comment, EditorGUILayout.TextArea);
+                    DrawAssetInspector();
+                }
+                else
+                {
+                    using (var scroll = new EditorGUILayout.ScrollViewScope(InspectorBaseGUIPos))
+                    {
+                        InspectorBaseGUIPos = scroll.scrollPosition;
+                        using (new GUILayout.VerticalScope())
+                        {
+                            LayoutGUI("组名", ref Group.Name, EditorGUILayout.TextField);
+                            LayoutGUI("描述", ref Group.Description, EditorGUILayout.TextArea);
+                            using (new EditorGUI.DisabledScope(Group.Disable))
+                            {
+                                GUILayout.Label($"帧数: {Group.FrameCount}");
+                                DrawGroupInspector();
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        protected virtual void OnActionContextMenue(GenericMenu menu, FrameAction action)
-        {
-            if (FrameLineClipboard.instance.PastePropertyCheck(action))
-            {
-                menu.AddItem(new GUIContent("粘贴属性"), false, () => { RegistUndo("Paste Property"); FrameLineClipboard.instance.PasteActionProperty(action); });
-            }
-            else
-            {
-                menu.AddDisabledItem(new GUIContent(("粘贴属性")));
-            }
-        }
 
         protected void Simulate()
         {
@@ -330,6 +349,32 @@ namespace FrameLine
             //{
             //    s.OnSceneGUI(Group, CurrentFrame);
             //}
+        }
+
+        public void OnPropertyModify()
+        {
+            RegistUndo("action property modif");
+        }
+        protected void DrawGroupInspector()
+        {
+        }
+
+        protected virtual void DrawAssetInspector()
+        {
+        }
+        protected void LayoutGUI<T>(string label, ref T v, System.Func<T, GUILayoutOption[], T> func, params GUILayoutOption[] options)
+        {
+            using(new GUILayout.HorizontalScope())
+            {
+                GUILayout.Label(label);
+                EditorGUI.BeginChangeCheck();
+                var newVal = func(v, options);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    OnPropertyModify();
+                    v = newVal;
+                }
+            }
         }
     }
 }
