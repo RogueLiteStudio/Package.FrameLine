@@ -349,9 +349,10 @@ namespace FrameLine
                 CurrentFrame = frame;
             }
             ScrollToFrame(CurrentFrame);
-            if (Simulator)
+            var simulator = FrameLineEditorCollector.instance.FindSimulate(this);
+            if (simulator)
             {
-                Simulator.Simulate(Group, CurrentFrame, SelectedActions);
+                simulator.Simulate(Group, CurrentFrame, SelectedActions);
                 SceneView.RepaintAll();
             }
         }

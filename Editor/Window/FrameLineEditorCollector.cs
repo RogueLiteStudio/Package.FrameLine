@@ -12,6 +12,7 @@ namespace FrameLine
             public FrameLineAsset Asset;
             public FrameLineEditorView View;
             public EditorWindow Window;
+            public FrameLineSimulator Simulator;
         }
         [SerializeField]
         private List<Unit> units = new List<Unit>();
@@ -42,6 +43,36 @@ namespace FrameLine
             return u.View;
         }
 
+        public void UpdateSimulator(EditorWindow window, FrameLineEditorView view, bool enable)
+        {
+            foreach (var u in units)
+            {
+                if (u.Window == window)
+                {
+                    if (u.View != view || !enable)
+                    {
+                        if (u.Simulator)
+                        {
+                            DestroyImmediate(u.Simulator);
+                        }
+                    }
+                    else if (u.View == view && enable)
+                    {
+                        if (u.Simulator == null)
+                        {
+                            u.Simulator = FrameLineSimulator.CreateSimulate(u.Asset, null);
+                        }
+                    }
+                }
+            }
+        }
+
+        public FrameLineSimulator FindSimulate(FrameLineEditorView view)
+        {
+            var u = units.Find(it => it.View == view);
+            return u?.Simulator;
+        }
+
         public void OnWindowDestroy(EditorWindow window)
         {
             Undo.ClearUndo(window);
@@ -50,6 +81,10 @@ namespace FrameLine
                 var u = units[i];
                 if (u.Window == window)
                 {
+                    if (u.Simulator)
+                    {
+                        DestroyImmediate(u.Simulator);
+                    }
                     if (u.View)
                     {
                         Undo.ClearUndo(u.View);
@@ -85,6 +120,26 @@ namespace FrameLine
                             FrameLineProcess.OnAssetSave(u.Asset);
                         }
                     }
+                }
+            }
+        }
+        private void OnEnable()
+        {
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+        }
+        private void OnPlayModeStateChanged(PlayModeStateChange stateChange)
+        {
+            foreach (var u in units)
+            {
+                if (u.Simulator)
+                {
+                    DestroyImmediate(u.Simulator);
+                    u.Simulator = null;
                 }
             }
         }

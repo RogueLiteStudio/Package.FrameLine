@@ -30,7 +30,6 @@ namespace FrameLine
         [SerializeField]
         protected FrameLineAsset currentAsset;
         public FrameLineEditorView EditorView;
-        protected FrameLineSimulator currentSimulate;
         public Toolbar TopToolbar { get; protected set; }
         public Toggle PreviewToggle { get; protected set; }
         public VisualElement EditorViewRoot { get; protected set; }
@@ -50,9 +49,10 @@ namespace FrameLine
             TopToolbar.Add(PreviewToggle = new Toggle("预览"));
             PreviewToggle.RegisterValueChangedCallback((evt)=> RefreshPreview());
             PreviewToggle.labelElement.style.minWidth = 0;
-            if (EditorView && EditorView.Simulator)
+            if (EditorView)
             {
-                PreviewToggle.SetValueWithoutNotify(true);
+                var simulator = FrameLineEditorCollector.instance.FindSimulate(EditorView);
+                PreviewToggle.SetValueWithoutNotify(simulator != null);
             }
             if (currentAsset)
             {
@@ -75,17 +75,13 @@ namespace FrameLine
                 return;
             if (EditorView)
             {
-                if (EditorView.Simulator)
-                {
-                    DestroyImmediate(EditorView.Simulator);
-                    EditorView.Simulator = null;
-                }
                 EditorView.RootView.RemoveFromHierarchy();
             }
             if (EditorView)
             {
                 Undo.RegisterCompleteObjectUndo(this, "switch asset");
             }
+            FrameLineEditorCollector.instance.UpdateSimulator(this, EditorView, PreviewToggle.value);
             currentAsset = asset;
             EditorView = CreateViewEditor(asset);
             EditorViewRoot?.Add(EditorView.RootView);
@@ -107,21 +103,8 @@ namespace FrameLine
         {
             if (!EditorView || PreviewToggle == null)
                 return;
-            bool hasPreview = EditorView.Simulator != null;
-            if (hasPreview != PreviewToggle.value)
-            {
-                if (EditorView.Simulator)
-                {
-                    DestroyImmediate(EditorView.Simulator);
-                    currentSimulate = null;
-                }
-                else
-                {
-                    EditorView.Simulator = FrameLineSimulator.CreateSimulate(currentAsset, null);
-                    EditorView.SetFrameLocation(EditorView.CurrentFrame);
-                    currentSimulate = EditorView.Simulator;
-                }
-            }
+            FrameLineEditorCollector.instance.UpdateSimulator(this, EditorView, PreviewToggle.value);
+            EditorView.SetFrameLocation(EditorView.CurrentFrame);
         }
 
         protected void OnUndoRedo()
@@ -130,13 +113,7 @@ namespace FrameLine
             {
                 EditorView = CreateViewEditor(currentAsset);
             }
-            if (currentSimulate)
-            {
-                if (!EditorView || EditorView.Simulator != currentSimulate)
-                {
-                    DestroyImmediate(currentSimulate);
-                }
-            }
+            FrameLineEditorCollector.instance.UpdateSimulator(this, EditorView, PreviewToggle.value);
             if (EditorView)
             {
                 var first = EditorViewRoot.Children().FirstOrDefault();
@@ -161,10 +138,6 @@ namespace FrameLine
         }
         protected void OnDestroy()
         {
-            if (EditorView && EditorView.Simulator)
-            {
-                DestroyImmediate(EditorView.Simulator);
-            }
             FrameLineEditorCollector.instance.OnWindowDestroy(this);
         }
 
