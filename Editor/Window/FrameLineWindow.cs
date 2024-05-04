@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Linq;
+using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -29,21 +30,30 @@ namespace FrameLine
         [SerializeField]
         protected FrameLineAsset currentAsset;
         public FrameLineEditorView EditorView;
+        protected FrameLineSimulator currentSimulate;
         public Toolbar TopToolbar { get; protected set; }
+        public Toggle PreviewToggle { get; protected set; }
         public VisualElement EditorViewRoot { get; protected set; }
         public IMGUIContainer InspectorView { get; protected set; }
         protected RadioButtonList groupListView;
-        protected virtual string UXMLPath => null;
         public void CreateGUI()
         {
-            if (!string.IsNullOrEmpty(UXMLPath))
-            {
-                var visualTree = Resources.Load<VisualTreeAsset>(UXMLPath);
-                visualTree.CloneTree(rootVisualElement);
-                TopToolbar = rootVisualElement.Q<Toolbar>("toolbar");
-                EditorViewRoot = rootVisualElement.Q<VisualElement>("editorViewRoot");
-            }
+            rootVisualElement.Add(TopToolbar = new Toolbar());
+            var splitTop = new TwoPaneSplitView(0, 150, TwoPaneSplitViewOrientation.Horizontal);
+            splitTop.Add(CreateListView());
+            var split = new TwoPaneSplitView(1, 200, TwoPaneSplitViewOrientation.Horizontal);
+            split.Add(EditorViewRoot = new VisualElement());
+            split.Add(InspectorView = new IMGUIContainer(DrawInspector));
+            splitTop.Add(split);
+            rootVisualElement.Add(splitTop);
             OnCreateLayOut();
+            TopToolbar.Add(PreviewToggle = new Toggle("预览"));
+            PreviewToggle.RegisterValueChangedCallback((evt)=> RefreshPreview());
+            PreviewToggle.labelElement.style.minWidth = 0;
+            if (EditorView && EditorView.Simulator)
+            {
+                PreviewToggle.SetValueWithoutNotify(true);
+            }
             if (currentAsset)
             {
                 RefreshGroupList();
@@ -63,20 +73,23 @@ namespace FrameLine
         {
             if (currentAsset == asset)
                 return;
-            if (EditorView == null)
+            if (EditorView)
             {
-                currentAsset = asset;
-                EditorView = CreateViewEditor(asset);
-                EditorViewRoot?.Add(EditorView.RootView);
+                if (EditorView.Simulator)
+                {
+                    DestroyImmediate(EditorView.Simulator);
+                    EditorView.Simulator = null;
+                }
+                EditorView.RootView.RemoveFromHierarchy();
             }
-            else
+            if (EditorView)
             {
                 Undo.RegisterCompleteObjectUndo(this, "switch asset");
-                Undo.RegisterCompleteObjectUndo(EditorView, "switch asset");
-                currentAsset = asset;
-                EditorView.Asset = asset;
-                EditorView.SwitchGroup(asset.Groups[0].GUID);
             }
+            currentAsset = asset;
+            EditorView = CreateViewEditor(asset);
+            EditorViewRoot?.Add(EditorView.RootView);
+            EditorView.SwitchGroup(asset.Groups[0].GUID);
             RefreshGroupList();
         }
 
@@ -89,16 +102,52 @@ namespace FrameLine
         {
             Undo.undoRedoPerformed -= OnUndoRedo;
         }
+
+        protected virtual void RefreshPreview()
+        {
+            if (!EditorView || PreviewToggle == null)
+                return;
+            bool hasPreview = EditorView.Simulator != null;
+            if (hasPreview != PreviewToggle.value)
+            {
+                if (EditorView.Simulator)
+                {
+                    DestroyImmediate(EditorView.Simulator);
+                    currentSimulate = null;
+                }
+                else
+                {
+                    EditorView.Simulator = FrameLineSimulator.CreateSimulate(currentAsset, null);
+                    EditorView.SetFrameLocation(EditorView.CurrentFrame);
+                    currentSimulate = EditorView.Simulator;
+                }
+            }
+        }
+
         protected void OnUndoRedo()
         {
             if (currentAsset)
             {
                 EditorView = CreateViewEditor(currentAsset);
             }
+            if (currentSimulate)
+            {
+                if (!EditorView || EditorView.Simulator != currentSimulate)
+                {
+                    DestroyImmediate(currentSimulate);
+                }
+            }
             if (EditorView)
             {
+                var first = EditorViewRoot.Children().FirstOrDefault();
+                if (first.userData != EditorView.RootView.userData)
+                {
+                    first.RemoveFromHierarchy();
+                    EditorViewRoot.Add(EditorView.RootView);
+                }
                 EditorView.RefreshView();
             }
+            RefreshPreview();
             RefreshGroupList();
             OnRefresh();
         }
@@ -112,25 +161,15 @@ namespace FrameLine
         }
         protected void OnDestroy()
         {
+            if (EditorView && EditorView.Simulator)
+            {
+                DestroyImmediate(EditorView.Simulator);
+            }
             FrameLineEditorCollector.instance.OnWindowDestroy(this);
         }
 
         protected virtual void OnCreateLayOut()
         {
-            if (TopToolbar == null)
-            {
-                rootVisualElement.Add(TopToolbar = new Toolbar());
-            }
-            if (EditorViewRoot == null)
-            {
-                var splitTop = new TwoPaneSplitView(0, 150, TwoPaneSplitViewOrientation.Horizontal);
-                splitTop.Add(CreateListView());
-                var split = new TwoPaneSplitView(1, 200, TwoPaneSplitViewOrientation.Horizontal);
-                split.Add(EditorViewRoot = new VisualElement());
-                split.Add(InspectorView = new IMGUIContainer(DrawInspector));
-                splitTop.Add(split);
-                rootVisualElement.Add(splitTop);
-            }
         }
 
         private void DrawInspector()

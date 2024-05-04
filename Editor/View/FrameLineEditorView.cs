@@ -22,10 +22,12 @@ namespace FrameLine
 
     public class FrameLineEditorView : ScriptableObject, IPropertyEditorContext
     {
+        public const float FrameTime = 1 / 30f;
         public FrameLineAsset Asset;
         public FrameLineGUIEvent EventHandler;
         public string GroupId;
 
+        public FrameLineSimulator Simulator;
         [System.NonSerialized]
         private FrameActionGroup _group;
         public FrameActionGroup Group 
@@ -59,6 +61,7 @@ namespace FrameLine
         public FrameLineHeadView HeadView = new FrameLineHeadView();
         public FrameLineTrackView TrackView = new FrameLineTrackView();
 
+        protected IVisualElementScheduledItem playingTimer;
         private TwoPaneSplitView _rootView;
         private IMGUIContainer _headView;
         private IMGUIContainer _trackView;
@@ -72,7 +75,10 @@ namespace FrameLine
                     _rootView.Add(_headView = new IMGUIContainer(DrawTrackHead));
                     _rootView.Add(_trackView = new IMGUIContainer(DrawTrack));
                     _trackView.RegisterCallback<MouseMoveEvent>((evt) => _trackView.MarkDirtyRepaint());
+                    playingTimer = _rootView.schedule.Execute(OnTick).Every(10);
+                    playingTimer.Pause();
 
+                    _rootView.userData = Asset;
                 }
                 return _rootView;
             }
@@ -192,6 +198,8 @@ namespace FrameLine
                     ScrollPos.x = frame * ViewStyles.FrameWidth;
                 }
             }
+            _headView?.MarkDirtyRepaint();
+            _trackView?.MarkDirtyRepaint();
         }
 
         protected virtual void DrawTrackHead()
@@ -300,35 +308,52 @@ namespace FrameLine
             }
         }
 
-
-        protected void Simulate()
+        public void SetPlayState(bool playing)
         {
-            //if (Group == null)
-            //    return;
-            //if (IsPlaying)
-            //{
-            //    FramePassTime += Window.DeltaTime;
-            //    if (FramePassTime > FrameLineEditorWindow.FrameTime)
-            //    {
-            //        FramePassTime %= FrameLineEditorWindow.FrameTime;
-            //        CurrentFrame++;
-            //        if (CurrentFrame >= Group.FrameCount)
-            //        {
-            //            CurrentFrame = 0;
-            //            if (IsPlaying)
-            //                OnGroupSimulateEnd();
-            //        }
-            //    }
-            //}
-            //if (Window.EnableSimulate)
-            //{
-            //    var s = FrameLineEditorContext.instance.GetSimulate(this, Asset);
-            //    s.Simulate(Group, CurrentFrame);
-            //}
-            //else
-            //{
-            //    FrameLineEditorContext.instance.ClearSimulateByGUI(this);
-            //}
+            if (IsPlaying == playing)
+                return;
+            IsPlaying = playing;
+            FramePassTime = 0;
+            if (IsPlaying)
+                playingTimer.Resume();
+            else
+                playingTimer.Pause();
+        }
+
+        protected void OnTick(TimerState timerState)
+        {
+            FramePassTime += (timerState.deltaTime * 0.001f);
+            if (FramePassTime > FrameTime)
+            {
+                FramePassTime %= FrameTime;
+                SetFrameLocation(CurrentFrame + 1);
+            }
+        }
+
+        public void SetFrameLocation(int frame)
+        {
+            if (frame >= Group.FrameCount)
+            {
+                CurrentFrame = 0;
+                if (IsPlaying)
+                {
+                    OnGroupSimulateEnd();
+                }
+            }
+            else if (frame < 0)
+            {
+                CurrentFrame = 0;
+            }
+            else
+            {
+                CurrentFrame = frame;
+            }
+            ScrollToFrame(CurrentFrame);
+            if (Simulator)
+            {
+                Simulator.Simulate(Group, CurrentFrame, SelectedActions);
+                SceneView.RepaintAll();
+            }
         }
 
         //预览播放状态，当前组播放完毕，主要用于自动播放下一个动画实现连贯播放

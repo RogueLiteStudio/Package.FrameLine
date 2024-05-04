@@ -138,15 +138,8 @@ namespace FrameLine
                     {
                         if (EditorView.CurrentFrame != selectFrame)
                         {
+                            EditorView.SetFrameLocation(selectFrame);
                             EditorView.CurrentFrame = selectFrame;
-                            if (selectFrame == EditorView.VisableFrameStart)
-                            {
-                                EditorView.ScrollToFrame(selectFrame - 1);
-                            }
-                            else if (selectFrame >= (EditorView.VisableFrameEnd - 2))
-                            {
-                                EditorView.ScrollToFrame(selectFrame + 1);
-                            }
                         }
                     }
                     IsDragFrameBar = true;

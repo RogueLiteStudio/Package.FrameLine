@@ -36,25 +36,33 @@ namespace FrameLine
             {
                 using (new GUILayout.HorizontalScope(GUILayout.Height(ViewStyles.FrameBarHeight)))
                 {
+                    //第一帧
+                    if (GUILayout.Button(BuiltInIcon.Instance.FirstKey, EditorStyles.toolbarButton))
+                    {
+                        editorView.SetFrameLocation(0);
+                    }
                     //后退按钮
                     if (GUILayout.Button(BuiltInIcon.Instance.PrevKey, EditorStyles.toolbarButton))
                     {
-                        editorView.CurrentFrame = Mathf.Max(0, editorView.CurrentFrame - 1);
-                        editorView.FramePassTime = 0;
-                        editorView.ScrollToFrame(editorView.CurrentFrame);
+                        editorView.SetFrameLocation(editorView.CurrentFrame - 1);
                     }
                     //播放暂停按钮
                     if (GUILayout.Button(editorView.IsPlaying ? BuiltInIcon.Instance.Pause : BuiltInIcon.Instance.Play, EditorStyles.toolbarButton))
                     {
-                        editorView.IsPlaying = !editorView.IsPlaying;
+                        editorView.SetPlayState(!editorView.IsPlaying);
                         editorView.FramePassTime = 0;
                     }
                     //前进按钮
                     if (GUILayout.Button(BuiltInIcon.Instance.NextKey, EditorStyles.toolbarButton))
                     {
-                        editorView.CurrentFrame = Mathf.Min(editorView.Group.FrameCount, editorView.CurrentFrame + 1);
+                        editorView.SetFrameLocation(editorView.CurrentFrame + 1);
                         editorView.FramePassTime = 0;
-                        editorView.ScrollToFrame(editorView.CurrentFrame);
+                    }
+                    //最后一帧
+                    if (GUILayout.Button(BuiltInIcon.Instance.LastKey, EditorStyles.toolbarButton))
+                    {
+                        editorView.SetFrameLocation(editorView.Group.FrameCount);
+                        editorView.FramePassTime = 0;
                     }
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button(BuiltInIcon.Instance.Add, EditorStyles.toolbarButton))
