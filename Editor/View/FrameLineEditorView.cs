@@ -83,6 +83,19 @@ namespace FrameLine
                 return _rootView;
             }
         }
+        private bool hasDelayCall;
+
+        public void DelayRefreshPreView()
+        {
+            if (hasDelayCall || IsPlaying)
+                return;
+            hasDelayCall = true;
+            EditorApplication.delayCall += () =>
+            {
+                hasDelayCall = false;
+                SetFrameLocation(CurrentFrame);
+            };
+        }
 
         public virtual void OnInit()
         {
@@ -117,6 +130,7 @@ namespace FrameLine
                 EditorUtility.SetDirty(Asset);
             }
             Undo.RegisterCompleteObjectUndo(this, name);
+            DelayRefreshPreView();
         }
 
         public virtual void OnFrameBarMenue(GenericMenu menu)
@@ -184,6 +198,13 @@ namespace FrameLine
             FrameTrackUtil.RebuildTrack(this);
             _headView?.MarkDirtyRepaint();
             _trackView?.MarkDirtyRepaint();
+
+            var simulator = FrameLineEditorCollector.instance.FindSimulate(this);
+            if (simulator)
+            {
+                simulator.MarkReBuild();
+                DelayRefreshPreView();
+            }
         }
 
         public void ScrollToFrame(int frame)
