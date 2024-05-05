@@ -92,11 +92,20 @@ namespace FrameLine
         protected virtual void OnEnable()
         {
             Undo.undoRedoPerformed += OnUndoRedo;
+            SceneView.duringSceneGui += OnSceneGUI;
         }
 
         protected virtual void OnDisable()
         {
             Undo.undoRedoPerformed -= OnUndoRedo;
+            SceneView.duringSceneGui -= OnSceneGUI;
+        }
+        private void OnSceneGUI(SceneView sceneView)
+        {
+            if (EditorView)
+            {
+                EditorView.OnSceneGUI(sceneView);
+            }
         }
 
         protected virtual void RefreshPreview()

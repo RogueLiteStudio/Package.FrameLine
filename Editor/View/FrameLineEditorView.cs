@@ -101,7 +101,7 @@ namespace FrameLine
         {
         }
 
-        private void OnEnable()
+        protected virtual void OnEnable()
         {
             if (EventHandler == null)
                 EventHandler = new FrameLineGUIEvent(this);
@@ -387,19 +387,17 @@ namespace FrameLine
 
         public virtual void OnSceneGUI(SceneView sceneView)
         {
-            //if (!Window.EnableSimulate)
-            //    return;
-            //var s = FrameLineEditorContext.instance.FindSimulate(this, Asset);
-            //if (!s)
-            //    return;
-            //if (Window.ShowBone)
-            //{
-            //    s.DrawBone();
-            //}
-            //if (Window.ShowSceneGizmos)
-            //{
-            //    s.OnSceneGUI(Group, CurrentFrame);
-            //}
+            foreach (var action in Group.Actions)
+            {
+                if (action.Data is IGizmosable gizmosable)
+                {
+                    int endFrame = FrameActionUtil.GetActionEndFrame(Group, action);
+                    int offset = CurrentFrame - action.StartFrame;
+                    if (CurrentFrame > endFrame)
+                        offset = -1;
+                    gizmosable.DrawGizmos(Simulator, IsSlecected(action), offset, endFrame - action.StartFrame + 1);
+                }
+            }
         }
 
         public void OnPropertyModify()
