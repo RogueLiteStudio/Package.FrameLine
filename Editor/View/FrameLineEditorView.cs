@@ -84,6 +84,10 @@ namespace FrameLine
             }
         }
 
+        public virtual void OnInit()
+        {
+        }
+
         private void OnEnable()
         {
             if (EventHandler == null)
@@ -381,7 +385,7 @@ namespace FrameLine
         {
             RegistUndo("action property modif");
         }
-        protected void DrawGroupInspector()
+        protected virtual void DrawGroupInspector()
         {
         }
 
@@ -404,5 +408,10 @@ namespace FrameLine
             }
             return false;
         }
+    }
+
+    public class TFrameLineEditorView<T> : FrameLineEditorView where T : FrameLineAsset
+    {
+        public T TAsset=> Asset as T;
     }
 }

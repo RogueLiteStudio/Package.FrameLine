@@ -39,6 +39,7 @@ namespace FrameLine
                     u.View.SwitchGroup(asset.Groups[0].GUID);
                 }
                 units.Add(u);
+                u.View.OnInit();
             }
             return u.View;
         }
