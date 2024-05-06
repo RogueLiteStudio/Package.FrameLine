@@ -21,7 +21,7 @@ namespace FrameLine
             {
                 if (!hasModify)
                 {
-                    EditorView.RegistUndo("drag clip start");
+                    EditorView.RegisterUndo("drag clip start");
                     hasModify = true;
                 }
                 OnDrag(pos, frame);

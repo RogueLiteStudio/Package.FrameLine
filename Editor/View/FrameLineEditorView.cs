@@ -122,7 +122,7 @@ namespace FrameLine
         {
             return SelectedActions.Contains(action.GUID);
         }
-        public virtual void RegistUndo(string name, bool needSave = true)
+        public virtual void RegisterUndo(string name, bool needSave = true)
         {
             Undo.RegisterCompleteObjectUndo(Asset, name);
             if (needSave)
@@ -404,7 +404,7 @@ namespace FrameLine
 
         public void OnPropertyModify()
         {
-            RegistUndo("action property modif");
+            RegisterUndo("action property modif");
         }
         protected virtual void DrawGroupInspector()
         {

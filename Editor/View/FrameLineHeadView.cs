@@ -75,7 +75,7 @@ namespace FrameLine
                             {
                                 menu.AddItem(new GUIContent(FrameLineUtil.GetTypeShowName(t)), false, (createType) => 
                                 {
-                                    editorView.RegistUndo("create action");
+                                    editorView.RegisterUndo("create action");
                                     var action = FrameLineUtil.CreateAction(editorView.Group, (System.Type)createType, editorView.CurrentFrame, 1);
                                     editorView.SelectedActions.Clear();
                                     editorView.SelectedActions.Add(action.GUID);

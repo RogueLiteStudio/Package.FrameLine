@@ -58,7 +58,7 @@ namespace FrameLine
                     bool enable = EditorGUILayout.Toggle(Action.Enable, GUILayout.Width(20));
                     if (EditorGUI.EndChangeCheck())
                     {
-                        EditorView.RegistUndo("action enable modify");
+                        EditorView.RegisterUndo("action enable modify");
                         Action.Enable = enable;
                     }
                     if (GUILayout.Button("", "PaneOptions"))
@@ -69,7 +69,7 @@ namespace FrameLine
                         {
                             menu.AddItem(new GUIContent("粘贴属性"), false, () => 
                             {
-                                EditorView.RegistUndo("action paste");
+                                EditorView.RegisterUndo("action paste");
                                 FrameLineClipboard.instance.PasteActionProperty(Action);
                             });
                         }
@@ -90,7 +90,7 @@ namespace FrameLine
                         int start = EditorGUILayout.IntField(Action.StartFrame);
                         if (EditorGUI.EndChangeCheck())
                         {
-                            EditorView.RegistUndo("action start frame modify");
+                            EditorView.RegisterUndo("action start frame modify");
                             Action.StartFrame = Mathf.Max(start, 0);
                         }
                         if (Action.Data is IFrameClip)
@@ -100,7 +100,7 @@ namespace FrameLine
                             int length = EditorGUILayout.IntField(Action.Length);
                             if (EditorGUI.EndChangeCheck())
                             {
-                                EditorView.RegistUndo("action length modify");
+                                EditorView.RegisterUndo("action length modify");
                                 Action.Length = length;
                             }
                         }
@@ -112,7 +112,7 @@ namespace FrameLine
                         string name = EditorGUILayout.TextField(Action.Name);
                         if (EditorGUI.EndChangeCheck())
                         {
-                            EditorView.RegistUndo("action name modify");
+                            EditorView.RegisterUndo("action name modify");
                             Action.Name = name;
                         }
                     }
@@ -123,7 +123,7 @@ namespace FrameLine
                         string commit = EditorGUILayout.TextArea(Action.Comment);
                         if (EditorGUI.EndChangeCheck())
                         {
-                            EditorView.RegistUndo("action comment modify");
+                            EditorView.RegisterUndo("action comment modify");
                             Action.Comment = commit;
                         }
                     }

@@ -167,7 +167,7 @@ namespace FrameLine
             scrollView.Add(groupListView = new RadioButtonList());
             groupListView.OnSelect = (key) =>
             {
-                EditorView.RegistUndo("switch action");
+                EditorView.RegisterUndo("switch action");
                 EditorView.SwitchGroup(key);
             };
             return content;

@@ -7,7 +7,7 @@ namespace FrameLine
         {
             if (view.SelectedActions.Count == 0)
                 return;
-            view.RegistUndo("remove action");
+            view.RegisterUndo("remove action");
             foreach (var id in view.SelectedActions)
             {
                 int idx = view.Group.Actions.FindIndex((a) => a.GUID == id);
@@ -25,7 +25,7 @@ namespace FrameLine
         {
             if (actions == null || actions.Length == 0)
                 return;
-            view.RegistUndo("paste action");
+            view.RegisterUndo("paste action");
             view.SelectedActions.Clear();
             foreach (var data in actions) 
             {
@@ -90,7 +90,7 @@ namespace FrameLine
         {
             if (view.SelectedActions.Count == 0)
                 return;
-            view.RegistUndo("set length to end");
+            view.RegisterUndo("set length to end");
             foreach (var id in view.SelectedActions)
             {
                 var action = view.Group.Find(id);
