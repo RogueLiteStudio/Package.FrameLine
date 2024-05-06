@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace FrameLine
@@ -127,7 +128,7 @@ namespace FrameLine
                 ReBuild(group);
                 needRebuild = false;
             }
-            OnBeforSimulate(group, frameIndex);
+            OnBeforSimulate(group, frameIndex, selectedActions);
             for (int i=0; i<simulators.Count; ++i)
             {
                 var s = simulators[i];
@@ -172,7 +173,19 @@ namespace FrameLine
                 s.ActionSimulator.OnUpdate(this, s.Action, frameData);
                 simulators[i] = s;
             }
-            OnAfterSimulate(group, frameIndex);
+            OnAfterSimulate(group, frameIndex, selectedActions);
+        }
+
+        public virtual void OnSceneGUI(FrameActionGroup group, int frameIndex, List<string> selectedActions)
+        {
+            foreach (var action in group.Actions)
+            {
+                if (action.Data is ISimulateGizmosable gizmosable)
+                {
+                    int endFrame = FrameActionUtil.GetActionEndFrame(group, action);
+                    gizmosable.DrawGizmos(this, selectedActions == null || selectedActions.Contains(action.GUID), action.StartFrame, endFrame, frameIndex);
+                }
+            }
         }
 
         protected void ReBuild(FrameActionGroup group)
@@ -212,8 +225,15 @@ namespace FrameLine
             simulators.AddRange(cache);
         }
         protected virtual void OnInitialize() { }
-        protected virtual void OnBeforSimulate(FrameActionGroup group, int frameIndex) { }
-        protected virtual void OnAfterSimulate(FrameActionGroup group, int frameIndex) { }
+        protected virtual void OnBeforSimulate(FrameActionGroup group, int frameIndex, List<string> selectedActions) { }
+        protected virtual void OnAfterSimulate(FrameActionGroup group, int frameIndex, List<string> selectedActions) { }
+
+
+        public void RegistUndo(string name)
+        {
+            Undo.RegisterCompleteObjectUndo(asset, name);
+            EditorUtility.SetDirty(asset);
+        }
     }
 
     public abstract class TFrameLineSimulator<T> : FrameLineSimulator where T : FrameLineAsset

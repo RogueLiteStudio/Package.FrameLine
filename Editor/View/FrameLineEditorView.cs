@@ -378,8 +378,8 @@ namespace FrameLine
             if (simulator)
             {
                 simulator.Simulate(Group, CurrentFrame, SelectedActions);
-                SceneView.RepaintAll();
             }
+            SceneView.RepaintAll();
         }
 
         //预览播放状态，当前组播放完毕，主要用于自动播放下一个动画实现连贯播放
@@ -394,6 +394,11 @@ namespace FrameLine
                     int endFrame = FrameActionUtil.GetActionEndFrame(Group, action);
                     gizmosable.DrawGizmos(this, IsSlecected(action), action.StartFrame, endFrame, CurrentFrame);
                 }
+            }
+            var simulator = FrameLineEditorCollector.instance.FindSimulate(this);
+            if (simulator)
+            {
+                simulator.OnSceneGUI(Group, CurrentFrame, SelectedActions);
             }
         }
 
