@@ -392,10 +392,7 @@ namespace FrameLine
                 if (action.Data is IGizmosable gizmosable)
                 {
                     int endFrame = FrameActionUtil.GetActionEndFrame(Group, action);
-                    int offset = CurrentFrame - action.StartFrame;
-                    if (CurrentFrame > endFrame)
-                        offset = -1;
-                    gizmosable.DrawGizmos(Simulator, IsSlecected(action), offset, endFrame - action.StartFrame + 1);
+                    gizmosable.DrawGizmos(this, IsSlecected(action), action.StartFrame, endFrame, CurrentFrame);
                 }
             }
         }

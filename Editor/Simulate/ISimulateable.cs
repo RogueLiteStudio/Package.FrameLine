@@ -7,6 +7,6 @@
 
     public interface IGizmosable
     {
-        void DrawGizmos(FrameLineSimulator simulate, bool isSelect, int frameOffset, int length);
+        void DrawGizmos(FrameLineEditorView editorView, bool isSelect, int startFrame, int endFrame, int currentFrame);
     }
 }
